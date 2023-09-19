@@ -298,7 +298,7 @@ def schedule_observations_batch(observations):
                                  json=observations_serialized,
                                  headers={'Authorization': f'Token {settings.SATNOGS_API_TOKEN}'})
         response.raise_for_status()
-        logger.debug("Scheduled {len(observations_serialized)} passes!")
+        logger.debug(f"Scheduled {len(observations_serialized)} passes!")
     except requests.HTTPError:
         err = response.json()
         reason = extract_scheduling_error(err)
