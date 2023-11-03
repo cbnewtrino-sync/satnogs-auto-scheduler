@@ -14,7 +14,7 @@ sudo apt-get install git virtualenv python3-virtualenv
 
 virtualenv -p python3 env
 source env/bin/activate
-pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git@0.2
+pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git
 ```
 
 You can verify your installed version with the following command:
