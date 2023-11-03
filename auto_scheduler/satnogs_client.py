@@ -84,7 +84,7 @@ def get_paginated_endpoint(url,
         logger.error(f'API Request for {url} failed, error: {err}')
         raise APIRequestError from exception
     except requests.exceptions.ReadTimeout as exception:
-        logger.error(f'Timeout of API Request for {url}')
+        logger.error(f'Timeout after {TIMEOUT} seconds while requesting {url}')
         raise APIRequestError from exception
 
     return data
