@@ -40,6 +40,7 @@ def _log_level_string_to_int(log_level_string):
 
 def main():  # noqa: C901
     # pylint: disable=too-many-branches,too-many-statements,too-many-locals
+    settings.validate_config()
 
     # Parse arguments
     parser = argparse.ArgumentParser(
