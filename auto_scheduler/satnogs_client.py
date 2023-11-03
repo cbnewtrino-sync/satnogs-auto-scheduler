@@ -66,9 +66,9 @@ def get_paginated_endpoint(url,
             return data
 
         while 'next' in response.links and (not max_entries or len(data) < max_entries):
-            next_page_url = response.links['next']['url']
+            url = response.links['next']['url']
 
-            response = session.get(url=next_page_url, headers=headers, timeout=TIMEOUT)
+            response = session.get(url=url, headers=headers, timeout=TIMEOUT)
             response.raise_for_status()
 
             new_data = response.json()
