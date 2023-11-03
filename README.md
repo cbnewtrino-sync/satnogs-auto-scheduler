@@ -30,7 +30,7 @@ of using `./schedule_single_station.py`.
 
 Run the following script:
 ```
-./satnogs_auto_scheduler_setup.py
+satnogs_auto_scheduler_setup.py
 ```
 
 Follow the prompts to enter your SatNOGS DB and Network API tokens, The configuration file `.env` is generated.
@@ -42,7 +42,7 @@ NOTE: Since auto-scheduler version {unreleased} both SatNOGS Network & DB API To
 Perform a test run to download orbital elements and transmitter priorities (these are stored in `/tmp/cache`) with
 
 ```bash
-./schedule_single_station.py -s <ground station ID> -n
+schedule_single_station.py -s <ground station ID> -n
 ```
 
 The `-n` option computes the passes but does not schedule them. To schedule these passes, run
