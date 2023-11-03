@@ -127,7 +127,7 @@ class CacheManager:
 
     def fetch_transmitters_stats(self):
         logging.info(
-            "Download transmitter statistics from SatNOGS Network (this may take some minutes)...")
+            "Download transmitter statistics from SatNOGS Network (this will take some minutes)...")
         try:
             transmitters_stats_list = get_transmitter_stats()
         except APIRequestError:
