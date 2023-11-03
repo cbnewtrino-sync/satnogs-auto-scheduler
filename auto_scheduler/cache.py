@@ -27,6 +27,10 @@ class CacheManager:
     norad_cat_ids_of_interest = None
     satellites_by_norad_id = None
     tles_all = None
+    required_files = [
+        "transmitters_file", "transmitters2_file", "tles_file", "transmitters_stats_file",
+        "satellites_file", "satellites2_file"
+    ]
 
     def __init__(self, ground_station_id, ground_station_antennas, cache_dir, cache_age):
         # pylint: disable=too-many-arguments
@@ -67,11 +71,8 @@ class CacheManager:
         if tlast is None or (tnow - tlast).total_seconds() > self.cache_age * 3600:
             return True
 
-        required_files = [
-            self.transmitters_file, self.tles_file, self.transmitters_stats_file,
-            self.satellites_file
-        ]
-        for filename in required_files:
+        for filename_attr in self.required_files:
+            filename = getattr(self, filename_attr)
             if not os.path.isfile(filename):
                 return True
         return False
