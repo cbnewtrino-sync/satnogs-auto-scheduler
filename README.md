@@ -28,9 +28,14 @@ of using `./schedule_single_station.py`.
 
 ## Configuration
 
-Copy the env-dist file to .env and edit this file to add your SatNOGS Network API Token & DB API Token.
+Run the following script:
+```
+./satnogs_auto_scheduler_setup.py
+```
 
-NOTE: Both Tokens are required now to make sure that the same TLEs as available in SatNOGS DB are used!
+Follow the prompts to enter your SatNOGS DB and Network API tokens, The configuration file `.env` is generated.
+
+NOTE: Since auto-scheduler version {unreleased} both SatNOGS Network & DB API Tokens are required!
 
 ## Test run
 
