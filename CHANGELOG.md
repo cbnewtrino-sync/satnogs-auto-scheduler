@@ -1,10 +1,18 @@
 # Changelog
 
-## unreleased
+## 0.3 - 2023-11-04
+
+### Breaking Changes
+
+The SatNOGS DB API Token is always required now. Thus TLEs are fetched from SatNOGS DB diretly
+which has multiple benefits. It is much faster than the old method, removes errors when a satellite
+entry is using TLEs produced by "new" sources (e.g. SatNOGS Team) and enables output improvements.
+
+### Changes (non exhaustive list)
 
 - Added station-agnostic caching of SatNOGS Netowork transmitter statistics and the SatNOGS DB
-  satellite information. For now those files get updated each time the station-specific cache receives
-  an update.
+  satellite information. Allows re-using the transmitter statistics when sequentially scheduling
+  multiple stations. The cache age is determined by the modification timestamp (mtime) in the filesystem.
 - Added the usage of satellite names from SatNOGS DB in log output.
 - Removed scheduling for satellites with the "frequency misuse" flag in SatNOGS DB.
   Unless the user had special SSA permissions those passes were not scheduled already but made the
@@ -16,12 +24,9 @@
 - Enabled scheduling for satellites with temporary NORAD ID (>90000). This makes it obsolete to filter for
   satellite with a maximum norad id.
 - Removed the `MAX_NROAD_CAT_ID` setting.
-
-### Breaking Changes
-
-The SatNOGS DB API Token is always required now. Thus TLEs are fetched from SatNOGS DB diretly
-which has multiple benefits. It is much faster than the old method, removes errors when a satellite
-entry is using TLEs produced by "new" sources (e.g. SatNOGS Team) and enables output improvements.
+- Added `satnogs_auto_scheduler_setup.py` helper script.
+- Added input validation for API Tokens from config.
+- Improved log output for scheduling errors.
 
 ## 0.2 - 2023-02-06 - 2b77522
 

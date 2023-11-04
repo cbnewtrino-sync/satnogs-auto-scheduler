@@ -14,13 +14,13 @@ sudo apt-get install git virtualenv python3-virtualenv
 
 virtualenv -p python3 env
 source env/bin/activate
-pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git
+pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git@0.3
 ```
 
 You can verify your installed version with the following command:
 ```
 $ schedule_single_station.py --version
-satnogs-auto-scheduler 0+untagged.160.g3a8e121
+satnogs-auto-scheduler 0.3
 ```
 
 NOTE: When installed via pip the auto-scheduler is started using `schedule_single_station.py` (it is available in the $PATH) instead
