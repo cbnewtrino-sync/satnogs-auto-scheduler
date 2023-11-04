@@ -53,20 +53,14 @@ The `-n` option computes the passes but does not schedule them. To schedule thes
 
 ## Setup priority scheduling
 
-The following commands will add a list consisting of all DUV, BPSK1k2, BPSK9k6, [G]MSK and [G]FSK transmitters into `priorities_37.txt`.
-Please change the station id (here `37` - in the cache file and the list file name) to your corresponding one!
-
-```bash
-STATION_ID=37
-TRM_FILE="/tmp/cache/transmitters_${STATION_ID}.txt"
-PRIO_FILE="priorities_${STATION_ID}.txt"
-
-awk '{if ($3>=80) print $0 }' ${TRM_FILE} | grep -e "FSK" | awk '{printf("%s 1.0 %s\n",$1,$2)}' > ${PRIO_FILE}
-awk '{if ($3>=0) print $0 }' ${TRM_FILE} | grep -e "BPSK1k2" | awk '{printf("%s 1.0 %s\n",$1,$2)}' >> ${PRIO_FILE}
-awk '{if ($3>=0) print $0 }' ${TRM_FILE} | grep -e "BPSK9k6" | awk '{printf("%s 1.0 %s\n",$1,$2)}' >> ${PRIO_FILE}
-awk '{if ($3>=80) print $0 }' ${TRM_FILE} | grep -e "MSK" | awk '{printf("%s 1.0 %s\n",$1,$2)}' >> ${PRIO_FILE}
-sort -n -k 4 ${TRM_FILE} | grep -e "DUV" | awk '{printf("%s 1.0 %s\n",$1,$2)}' >> ${PRIO_FILE}
+The script `contrib/gen_prio_file.sh` can be used to generate a list of transmitters for prioritization, selecting
+all DUV, BPSK1k2, BPSK9k6, [G]MSK and [G]FSK transmitters. To create the file `priorities_37.txt`, run
 ```
+schedule_single_station.py --station 37 -n
+contrib/gen_prio_file.sh 37 > priorities_37.txt
+```
+
+Please change the station id (here `37`) to your corresponding one!
 
 ## Add cron-job
 
