@@ -4,7 +4,7 @@ This is a tool to automatically compute passes of satellites and schedule observ
 [SatNOGS Network](https://network.satnogs.org/). It is based on the scheduling code from
 SatNOGS network and requires [python-satellitetle](https://gitlab.com/librespacefoundation/python-satellitetle) for downloading TLEs.
 
-## Installation of latest stable version
+## Installation
 
 You will need Python 3 and the Python virtualenv utility. The following example assumes that you are using Debian.
 
@@ -48,7 +48,7 @@ schedule_single_station.py -s <ground station ID> -n
 The `-n` option computes the passes but does not schedule them. To schedule these passes, run
 
 ```bash
-./schedule_single_station.py -s <ground station ID>
+schedule_single_station.py -s <ground station ID>
 ```
 
 ## Setup priority scheduling
@@ -123,7 +123,7 @@ sudo systemctl start satnogs-auto-scheduler.service
 
 The following command will list all available command-line arguments:
 ```bash
-./schedule_single_station.py --help
+schedule_single_station.py --help
 ```
 
 ## License
