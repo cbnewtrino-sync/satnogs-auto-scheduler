@@ -62,7 +62,8 @@ contrib/gen_prio_file.sh 37 > priorities_37.txt
 
 Please change the station id (here `37`) to your corresponding one!
 
-## Add cron-job
+## Automation
+### Add cron-job (Option A)
 
 Start editing your default user's cron (select your preferred editor):
 ```bash
@@ -77,7 +78,7 @@ Add a line like this - execute the scheduling script on each full hour:
 Omit the `-f` option to also fill in the gaps, but be aware if using a rotator setup! This will wear-out your rotator very quickly!
 Add `-w 60` for a delay if you want to give your rotator a bit of time (60 s) to reset or home.
 
-## Add systemd-timer
+### Add systemd-timer (Option B)
 The advantage of using a systemd-timer for invoking the auto-scheduler lies in the better logging output (you can use `journalctl -u satnogs-auto-scheduler.service` to access the log output).
 
 - Add a systemd service unit file at `/etc/systemd/system/satnogs-auto-scheduler.service`:
