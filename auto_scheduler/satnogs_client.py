@@ -1,4 +1,5 @@
 import logging
+import sys
 from datetime import datetime
 
 import requests
@@ -254,16 +255,40 @@ def check_station_availability(station, allow_testing):
     return False
 
 
-def extract_scheduling_error(err):
+def handle_batch_scheduling_error(err):
     """
-    Extract the reason that caused scheduling of a new observation to fail.
+    Error handling of errors occuring during batch Observation scheduling
+    via the SatNOGS Network API.
     """
+
+    logger.error('Failed to batch-schedule observations.')
+
+    if err.get('detail') == 'Invalid token.':
+        logger.error('Invalid SATNOGS_API_TOKEN, Please check your configuration; Exiting.')
+        sys.exit(1)
+
     if 'non_field_errors' in err and err['non_field_errors'][
             0][:38] == 'No permission to schedule observations':
-        reason = 'permission error'
+        # Typical server response: 'No permission to schedule observations on station: 42'
+        logger.error(f'Sever response: {err["non_field_errors"][0]}')
+        logger.info("note: This permission error might be specific to only this "
+                    "(station, satellite, transmitter) pair.")
     else:
-        reason = f'reason provided by the server: {err}'
-    return reason
+        logger.error(f'Server response: {err}')
+
+
+def handle_single_scheduling_error(observation, err):
+    """
+    Error handling of errors occuring during single-observation scheduling
+    via the SatNOGS Network API.
+    """
+    logger.error(f"Failed to schedule pass at {observation['start']:%Y-%m-%dT%H:%M:%S}.")
+    if 'non_field_errors' in err:
+        logger.error(f"{err['non_field_errors'][0]}.")
+        logger.info("note: This error might be specific to only this "
+                    "(station, satellite, transmitter) pair.")
+    else:
+        logger.error(f"{err}.")
 
 
 def serialize_observation(satpass):
@@ -301,11 +326,9 @@ def schedule_observations_batch(observations):
         logger.debug(f"Scheduled {len(observations_serialized)} passes!")
     except requests.HTTPError:
         err = response.json()
-        reason = extract_scheduling_error(err)
+        handle_batch_scheduling_error(err)
 
-        logger.error('Failed to batch schedule due an error in one of the requested jobs, '
-                     f'reason: {reason}. '
-                     'Fall-back to single-pass scheduling.')
+        logger.info('Fall-back to single-pass scheduling...')
         for observation in observations:
             schedule_observation(observation)
 
@@ -330,6 +353,4 @@ def schedule_observation(observation):
         logger.info("Scheduled pass at {observation['start']:%Y-%m-%dT%H:%M:%S}!")
     except requests.HTTPError:
         err = response.json()
-        reason = extract_scheduling_error(err)
-        logger.error(
-            f"Failed to schedule pass at {observation['start']:%Y-%m-%dT%H:%M:%S}, {reason}.")
+        handle_single_scheduling_error(observation, err)
