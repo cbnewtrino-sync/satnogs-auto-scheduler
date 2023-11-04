@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from auto_scheduler import settings
 from auto_scheduler.satnogs_client import APIRequestError, get_active_transmitter_info, \
@@ -89,12 +89,11 @@ class CacheManager:
         - transmitters_receivable (dict(str->dict))
         - tles_all (list(dict))
         """
-        logging.info('Update satellites, transmitters, transmitter statistics and TLEs:')
         tnow = datetime.now()
 
         if force or self.update_needed():
+            logging.info('Update satellites, transmitters and TLEs:')
             self.fetch_satellites()
-            self.fetch_transmitters_stats()
             self.fetch_transmitters_receivable()
             self.fetch_tles()
 
@@ -102,6 +101,7 @@ class CacheManager:
             with open(self.last_update_file, "w") as fp_last_update:
                 fp_last_update.write(f'{tnow:%Y-%m-%dT%H:%M:%S}\n')
         else:
+            logging.info('Using cached satellites, transmitters and TLEs.')
 
             def key2int(dict_object):
                 """
@@ -116,15 +116,36 @@ class CacheManager:
 
             self.norad_cat_ids_alive = self.satellites_by_norad_id.keys()
 
-            with open(self.transmitters_stats_file) as fp_transmitters_stats:
-                self.transmitters_stats = json.load(fp_transmitters_stats)
-
             with open(self.transmitters2_file) as fp_transmitters2:
                 self.transmitters_receivable = json.load(fp_transmitters2)
 
             # Read tles
             with open(self.tles_file) as fp_tles:
                 self.tles_all = json.load(fp_tles)
+
+        # Handle the transmitters_stats seperately, motivation:
+        # - This data is station-agnostic.
+        # - Fetching this data requires several hundred requests and many minutes.
+        # Thus, avoid as many updates as possible.
+        if force or self.transmitters_stats_update_needed():
+            self.fetch_transmitters_stats()
+        else:
+            logging.info('Using cached transmitter statistics.')
+            with open(self.transmitters_stats_file) as fp_transmitters_stats:
+                self.transmitters_stats = json.load(fp_transmitters_stats)
+
+    def transmitters_stats_update_needed(self):
+        """
+        Check if the transmitters_stats file is missing or outdated.
+
+        The age is determined by reading the mtime (Modification Date) of the file.
+        """
+        if not os.path.isfile(self.transmitters_stats_file):
+            return True
+
+        now = datetime.now()
+        last_update = datetime.fromtimestamp(os.path.getmtime(self.transmitters_stats_file))
+        return now - last_update > timedelta(hours=self.cache_age)
 
     def fetch_transmitters_stats(self):
         logging.info(
