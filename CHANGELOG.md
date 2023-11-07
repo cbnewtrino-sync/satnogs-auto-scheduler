@@ -1,5 +1,11 @@
 # Changelog
 
+## unreleased
+
+- Fixed broken check if the configuration file exists
+- Added short developement guide at <docs/development-guide.md>
+- Changed error message if API Token is invalid
+
 ## 0.3 - 2023-11-04
 
 ### Breaking Changes
