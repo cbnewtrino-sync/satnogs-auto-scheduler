@@ -17,6 +17,16 @@ SATNOGS_API_TOKEN = config('SATNOGS_API_TOKEN', default='')
 SATNOGS_DB_API_TOKEN = config('SATNOGS_DB_API_TOKEN', default='')
 
 
+def validate_config_exists():
+    search_path = config._caller_path()  # pylint: disable=protected-access
+    filename = config._find_file(search_path)  # pylint: disable=protected-access
+    if filename == '':
+        print(f"ERROR: No configuration file found at {search_path}/\n"
+              "Run the following command to generate it: \n"
+              "satnogs_auto_scheduler_setup.py")
+        sys.exit(1)
+
+
 def validate_token(token, token_name):
     # Define a regular expression pattern for the SatNOGS [Network|DB] API Tokens
     pattern = r"^[a-f0-9]{40}$"
@@ -37,4 +47,5 @@ def validate_loaded_config():
 
 
 def validate_config():
+    validate_config_exists()
     validate_loaded_config()
