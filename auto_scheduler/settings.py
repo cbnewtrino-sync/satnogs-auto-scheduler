@@ -18,8 +18,8 @@ SATNOGS_DB_API_TOKEN = config('SATNOGS_DB_API_TOKEN', default='')
 
 
 def validate_config_exists():
-    search_path = config._caller_path()  # pylint: disable=protected-access
-    filename = config._find_file(search_path)  # pylint: disable=protected-access
+    search_path = resolve_config_path()
+    filename = resolve_config_filename()
     if filename == '':
         print(f"ERROR: No configuration file found at {search_path}/\n"
               "Run the following command to generate it: \n"
@@ -27,18 +27,45 @@ def validate_config_exists():
         sys.exit(1)
 
 
+def resolve_config_filename():
+    """
+    Returns filename as absolute path of the config file which was loaded by python-decouple.
+
+    Returns '/' if no config file was found.
+    """
+    search_path = config._caller_path()  # pylint: disable=protected-access
+    return config._find_file(search_path)  # pylint: disable=protected-access
+
+
+def resolve_config_path():
+    """
+    Returns the absolute path where python-decouple searches for the configuraiton file.
+    """
+    return config._caller_path()  # pylint: disable=protected-access
+
+
 def validate_token(token, token_name):
+
+    def fail():
+        filename = resolve_config_filename()
+        print(f"Please double-check your configuration in {filename}")
+        sys.exit(1)
+
+    if SATNOGS_API_TOKEN == '':
+        print("ERROR: No value for SATNOGS_API_TOKEN in configuration file.")
+        fail()
+
+    if SATNOGS_DB_API_TOKEN == '':
+        print("ERROR: No value for SATNOGS_DB_API_TOKEN in configuration file.")
+        fail()
+
     # Define a regular expression pattern for the SatNOGS [Network|DB] API Tokens
     pattern = r"^[a-f0-9]{40}$"
-
-    valid = bool(re.match(pattern, token))
-
-    if not valid:
+    if not bool(re.match(pattern, token)):
         print(f"ERROR: Invalid value for {token_name} in configuration file.\n"
               "The API Token should be exactly 40 characters long "
               "and consists of lowercase letters 'a' to 'f' and digits '0' to '9'.")
-        print("Please double-check the API Token you provided.")
-        sys.exit(1)
+        fail()
 
 
 def validate_loaded_config():
