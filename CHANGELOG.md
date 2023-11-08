@@ -1,8 +1,9 @@
 # Changelog
 
-## unreleased
+## 0.3.1 - 2023-11-08
 
-- Removed broken check if the configuration file exists (fixes config via env variables)
+- Removed broken check if the configuration file exists,
+  fixes config via env variables (e.g. when using docker)
 - Added short developement guide at <docs/development-guide.md>
 - Changed error message if API Token is invalid
 
