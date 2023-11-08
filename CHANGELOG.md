@@ -2,7 +2,7 @@
 
 ## unreleased
 
-- Fixed broken check if the configuration file exists
+- Removed broken check if the configuration file exists (fixes config via env variables)
 - Added short developement guide at <docs/development-guide.md>
 - Changed error message if API Token is invalid
 

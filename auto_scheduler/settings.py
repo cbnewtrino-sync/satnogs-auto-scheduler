@@ -17,16 +17,6 @@ SATNOGS_API_TOKEN = config('SATNOGS_API_TOKEN', default='')
 SATNOGS_DB_API_TOKEN = config('SATNOGS_DB_API_TOKEN', default='')
 
 
-def validate_config_exists():
-    search_path = resolve_config_path()
-    filename = resolve_config_filename()
-    if filename == '':
-        print(f"ERROR: No configuration file found at {search_path}/\n"
-              "Run the following command to generate it: \n"
-              "satnogs_auto_scheduler_setup.py")
-        sys.exit(1)
-
-
 def resolve_config_filename():
     """
     Returns filename as absolute path of the config file which was loaded by python-decouple.
@@ -74,5 +64,4 @@ def validate_loaded_config():
 
 
 def validate_config():
-    validate_config_exists()
     validate_loaded_config()
