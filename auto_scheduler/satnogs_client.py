@@ -350,7 +350,7 @@ def schedule_observation(observation):
                                  json=[serialize_observation(observation)],
                                  headers={'Authorization': f'Token {settings.SATNOGS_API_TOKEN}'})
         response.raise_for_status()
-        logger.info("Scheduled pass at {observation['start']:%Y-%m-%dT%H:%M:%S}!")
+        logger.info(f"Scheduled pass at {observation['start']:%Y-%m-%dT%H:%M:%S}!")
     except requests.HTTPError:
         err = response.json()
         handle_single_scheduling_error(observation, err)
