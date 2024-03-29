@@ -58,6 +58,10 @@ def get_paginated_endpoint(url,
         response.raise_for_status()
 
         new_data = response.json()
+
+        if len(new_data) == 0:
+            return []
+
         if filter_output_callback:
             data.extend(filter_output_callback(new_data))
         else:
