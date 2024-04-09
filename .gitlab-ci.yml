@@ -1,6 +1,7 @@
 variables:
   GITLAB_CI_IMAGE_PYTHON3: 'python:3.8'
   GITLAB_CI_PYPI_TOX: 'tox~=3.24.0'
+  GITLAB_CI_PYPI_RUFF: 'ruff~=0.3.5'
   GITLAB_CI_IMAGE_DOCKER: 'docker:20.10.18'
   GITLAB_CI_IMAGE_BINFMT: 'tonistiigi/binfmt:qemu-v7.0.0-28'
   GITLAB_CI_DOCKER_BUILDX_PLATFORMS: 'linux/amd64,linux/arm/v7,linux/arm64'
@@ -9,24 +10,16 @@ stages:
   - static
   - deploy
 
-static:
+lint:
   stage: static
   image: ${GITLAB_CI_IMAGE_PYTHON3}
-  variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-    PRE_COMMIT_HOME: "$CI_PROJECT_DIR/.cache/pre-commit"
   before_script:
-    - pip install virtualenv
-    - virtualenv venv
-    - source venv/bin/activate
-    - pip install pre-commit -e '.[dev]'
-    - pre-commit install
+    - pip install "$GITLAB_CI_PYPI_RUFF"
   script:
-    - pre-commit run --all-files
-  cache:
-    paths:
-      - .cache/pip
-      - .cache/pre-commit
+    - ruff check --output-format=gitlab . > quality.json
+  artifacts:
+    reports:
+      codequality: quality.json
 
 test:
   stage: static
