@@ -24,14 +24,17 @@ class Preference:
 
     def is_candidate(self, sat):
         # check if sat's name or transmitter is in our list
-        return bool((self.success_rate <= sat.success_rate)
-                    and (self.search_term in sat.mode or self.search_term in sat.name))
+        return bool(
+            (self.success_rate <= sat.success_rate)
+            and (self.search_term in sat.mode or self.search_term in sat.name)
+        )
 
 
 def main(station_id, constrains_file, priorities_file):
     # pylint: disable=too-many-locals
-    logging.basicConfig(level=logging.INFO,
-                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
     logging.info("Reading file with prefs")
     prefered_priorities = []
@@ -53,10 +56,11 @@ def main(station_id, constrains_file, priorities_file):
     if not ground_station:
         sys.exit()
 
-    cache = CacheManager(station_id, ground_station['antenna'], settings.CACHE_DIR,
-                         settings.CACHE_AGE)
-    logging.info(f'Last cache update: {cache.last_update()}')
-    logging.info(f'Cache update needed: {cache.update_needed()}')
+    cache = CacheManager(
+        station_id, ground_station["antenna"], settings.CACHE_DIR, settings.CACHE_AGE
+    )
+    logging.info(f"Last cache update: {cache.last_update()}")
+    logging.info(f"Cache update needed: {cache.update_needed()}")
     cache.update()
 
     # Read tles
@@ -86,12 +90,13 @@ def main(station_id, constrains_file, priorities_file):
         for elem in sat_list.values():
             out_file.writelines(f"{elem[0]} {elem[1]} {elem[2]}\n")
 
-    logging.info(f'Done, output file written: {priorities_file}')
+    logging.info(f"Done, output file written: {priorities_file}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate a priority list from a set of constraints given in a file.")
+        description="Generate a priority list from a set of constraints given in a file."
+    )
     parser.add_argument("-s", "--station", help="Ground station ID", type=int)
     parser.add_argument("CONSTRAINS_FILE", help="Input Priorities constrains file", type=str)
     parser.add_argument("PRIORITIES_FILE", help="Output Priorities file", type=str)

@@ -17,16 +17,16 @@ class Satellite:
                             Keys: [uuid, success_rate, good_rate, data_count, mode]
         """
         # pylint: disable=invalid-name
-        self.tle0 = tle['tle0']
-        self.tle1 = tle['tle1']
-        self.tle2 = tle['tle2']
-        self.id = tle['norad_cat_id']
-        self.name = parse_tle0(tle['tle0'])
-        self.transmitter = transmitter['uuid']
-        self.success_rate = transmitter['success_rate']
-        self.good_count = transmitter['good_count']
-        self.data_count = transmitter['data_count']
-        self.mode = transmitter['mode']
+        self.tle0 = tle["tle0"]
+        self.tle1 = tle["tle1"]
+        self.tle2 = tle["tle2"]
+        self.id = tle["norad_cat_id"]
+        self.name = parse_tle0(tle["tle0"])
+        self.transmitter = transmitter["uuid"]
+        self.success_rate = transmitter["success_rate"]
+        self.good_count = transmitter["good_count"]
+        self.data_count = transmitter["data_count"]
+        self.mode = transmitter["mode"]
 
     def __repr__(self):
         """
@@ -42,8 +42,16 @@ class Satellite:
         Check if two Satellites are equal.
         """
         for attribute_name in [
-                'tle0', 'tle1', 'tle2', 'id', 'name', 'transmitter', 'success_rate', 'good_count',
-                'data_count', 'mode'
+            "tle0",
+            "tle1",
+            "tle2",
+            "id",
+            "name",
+            "transmitter",
+            "success_rate",
+            "good_count",
+            "data_count",
+            "mode",
         ]:
             if not self.__getattribute__(attribute_name) == other.__getattribute__(attribute_name):
                 return False
@@ -62,6 +70,6 @@ class Satellite:
                 "success_rate": self.success_rate,
                 "good_count": self.good_count,
                 "data_count": self.data_count,
-                "mode": self.mode
-            }
+                "mode": self.mode,
+            },
         }

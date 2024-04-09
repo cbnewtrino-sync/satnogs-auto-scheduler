@@ -6,6 +6,7 @@ This command-line utility streamlines the configuration of the SatNOGS auto-sche
 by guiding users through the process of obtaining and entering the required API tokens,
 ultimately generating the configuration file.
 """
+
 import os
 import re
 import sys
@@ -25,8 +26,10 @@ def validate_token(token):
     valid = bool(re.match(pattern, token))
 
     if not valid:
-        print("ERROR: The API Token should be exactly 40 characters long "
-              "and consists of lowercase letters 'a' to 'f' and digits '0' to '9'.")
+        print(
+            "ERROR: The API Token should be exactly 40 characters long "
+            "and consists of lowercase letters 'a' to 'f' and digits '0' to '9'."
+        )
         print("Please double-check the API Token you provided.")
         sys.exit(1)
 
@@ -38,18 +41,22 @@ def get_tokens():
     print("Initializing SatNOGS auto-scheduler config...\n")
 
     print("==== DB API Token ====")
-    print("Login to https://db.satnogs.org/ and click on your profile picture \n"
-          "in the top right corner to get to 'Settings / API Token'. \n")
+    print(
+        "Login to https://db.satnogs.org/ and click on your profile picture \n"
+        "in the top right corner to get to 'Settings / API Token'. \n"
+    )
 
     db_api_token = input("Please enter your API Token for SatNOGS DB: ")
     validate_token(db_api_token)
 
     print("\n")
     print("==== Network API Token ====")
-    print("Log in to https://network.satnogs.org/ and click on the user icon at \n"
-          "the top right corner and then click on the 'Dashboard' option. \n"
-          "On the top of the dashboard page right under the user icon click the \n"
-          "button 'API key' to show your API token. \n")
+    print(
+        "Log in to https://network.satnogs.org/ and click on the user icon at \n"
+        "the top right corner and then click on the 'Dashboard' option. \n"
+        "On the top of the dashboard page right under the user icon click the \n"
+        "button 'API key' to show your API token. \n"
+    )
     network_api_token = input("Please enter your API Token for SatNOGS Network: ")
     validate_token(network_api_token)
 
@@ -58,8 +65,11 @@ def get_tokens():
 
 def write_env_file(config, filename=".env"):
     if os.path.isfile(filename):
-        overwrite = input(f"A file {filename} already exists. Do you want to overwrite it? (Y/n): "
-                          ).strip().lower()
+        overwrite = (
+            input(f"A file {filename} already exists. Do you want to overwrite it? (Y/n): ")
+            .strip()
+            .lower()
+        )
         if overwrite not in ["y", "yes"]:
             print("Configuration was not written. Exiting.")
             sys.exit()

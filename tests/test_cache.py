@@ -12,13 +12,15 @@ CACHE_DIR = str(Path(gettempdir()))
 CACHE_AGE = 24
 
 GROUND_STATION_ID = 2
-GROUND_STATION_ANTENNA = [{
-    'frequency': 430000000,
-    'frequency_max': 470000000,
-    'band': 'UHF',
-    'antenna_type': 'cross-yagi',
-    'antenna_type_name': 'Cross Yagi'
-}]
+GROUND_STATION_ANTENNA = [
+    {
+        "frequency": 430000000,
+        "frequency_max": 470000000,
+        "band": "UHF",
+        "antenna_type": "cross-yagi",
+        "antenna_type_name": "Cross Yagi",
+    }
+]
 
 
 @pytest.mark.skip(reason="this test takes approx. 2 minutes")
@@ -26,8 +28,9 @@ def test_cachemanager_force_update():
     """
     Unit test for the CacheManager
     """
-    logging.basicConfig(level=logging.DEBUG,
-                        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
     cache = CacheManager(GROUND_STATION_ID, GROUND_STATION_ANTENNA, CACHE_DIR, CACHE_AGE)
     print(cache.last_update())
     print(cache.update_needed())

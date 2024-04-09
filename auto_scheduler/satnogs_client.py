@@ -19,12 +19,14 @@ class APIRequestError(IOError):
     """
 
 
-def get_paginated_endpoint(url,
-                           max_entries=None,
-                           token=None,
-                           max_retries=0,
-                           filter_output_callback=None,
-                           stop_criterion_callback=None):
+def get_paginated_endpoint(
+    url,
+    max_entries=None,
+    token=None,
+    max_retries=0,
+    filter_output_callback=None,
+    stop_criterion_callback=None,
+):
     # pylint: disable=too-many-arguments
     """
     Fetch data from a SatNOGS Network/DB API endpoint.
@@ -46,10 +48,10 @@ def get_paginated_endpoint(url,
     """
     try:
         session = requests.Session()
-        session.mount('https://', requests.adapters.HTTPAdapter(max_retries=max_retries))
+        session.mount("https://", requests.adapters.HTTPAdapter(max_retries=max_retries))
 
         if token:
-            headers = {'Authorization': f'Token {token}'}
+            headers = {"Authorization": f"Token {token}"}
         else:
             headers = None
 
@@ -71,8 +73,8 @@ def get_paginated_endpoint(url,
         if stop_criterion_callback and stop_criterion_callback(new_data):
             return data
 
-        while 'next' in response.links and (not max_entries or len(data) < max_entries):
-            url = response.links['next']['url']
+        while "next" in response.links and (not max_entries or len(data) < max_entries):
+            url = response.links["next"]["url"]
 
             response = session.get(url=url, headers=headers, timeout=TIMEOUT)
             response.raise_for_status()
@@ -87,10 +89,10 @@ def get_paginated_endpoint(url,
                 break
     except requests.HTTPError as exception:
         err = response.json()
-        logger.error(f'API Request for {url} failed, error: {err}')
+        logger.error(f"API Request for {url} failed, error: {err}")
         raise APIRequestError from exception
     except requests.exceptions.ReadTimeout as exception:
-        logger.error(f'Timeout after {TIMEOUT} seconds while requesting {url}')
+        logger.error(f"Timeout after {TIMEOUT} seconds while requesting {url}")
         raise APIRequestError from exception
 
     return data
@@ -100,7 +102,7 @@ def get_satellite_info():
     """
     Fetch all satellites from SatNOGS DB
     """
-    return get_paginated_endpoint(f'{settings.DB_BASE_URL}/api/satellites')
+    return get_paginated_endpoint(f"{settings.DB_BASE_URL}/api/satellites")
 
 
 def get_active_transmitter_info(fmin, fmax):
@@ -113,7 +115,7 @@ def get_active_transmitter_info(fmin, fmax):
     - 'downlink_low' within (fmin, fmax] frequency band
     - associated with a satellite, via 'norad_cat_id'
     """
-    transmitters = get_paginated_endpoint(f'{settings.DB_BASE_URL}/api/transmitters')
+    transmitters = get_paginated_endpoint(f"{settings.DB_BASE_URL}/api/transmitters")
 
     transmitters_filtered = []
     for entry in transmitters:
@@ -129,7 +131,7 @@ def get_active_transmitter_info(fmin, fmax):
         transmitter = {
             "norad_cat_id": entry["norad_cat_id"],
             "uuid": entry["uuid"],
-            "mode": entry["mode"]
+            "mode": entry["mode"],
         }
         transmitters_filtered.append(transmitter)
 
@@ -140,8 +142,9 @@ def get_tles():
     """
     Fetch latest TLEs from SatNOGS DB.
     """
-    tle_data = get_paginated_endpoint(f'{settings.DB_BASE_URL}/api/tle/',
-                                      token=settings.SATNOGS_DB_API_TOKEN)
+    tle_data = get_paginated_endpoint(
+        f"{settings.DB_BASE_URL}/api/tle/", token=settings.SATNOGS_DB_API_TOKEN
+    )
     return tle_data
 
 
@@ -153,7 +156,7 @@ def get_transmitter_stats():
     This operation takes some minutes. It fetches many pages
     (78 pages as of 2023-01, ~4min wall clock time). Cache wisely!
     """
-    transmitters = get_paginated_endpoint(f'{settings.NETWORK_BASE_URL}/api/transmitters/')
+    transmitters = get_paginated_endpoint(f"{settings.NETWORK_BASE_URL}/api/transmitters/")
     return transmitters
 
 
@@ -175,39 +178,34 @@ def get_scheduled_passes_from_network(ground_station, tmin, tmax):
     def filter_callback(data):
         scheduled_passes = []
         for obs in data:
-            start = datetime.strptime(obs['start'].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
-            end = datetime.strptime(obs['end'].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
+            start = datetime.strptime(obs["start"].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
+            end = datetime.strptime(obs["end"].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
             satpass = {
                 "tr": start,
                 "ts": end,
                 "td": end - start,
                 "scheduled": True,
-                "altt": obs['max_altitude'],
+                "altt": obs["max_altitude"],
                 "priority": 1,
-                "transmitter": {
-                    "uuid": obs['transmitter'],
-                    "mode": ''
-                },
-                "satellite": {
-                    "name": '',
-                    "id": obs['norad_cat_id']
-                }
+                "transmitter": {"uuid": obs["transmitter"], "mode": ""},
+                "satellite": {"name": "", "id": obs["norad_cat_id"]},
             }
 
-            if satpass['ts'] > tmin and satpass['tr'] < tmax:
+            if satpass["ts"] > tmin and satpass["tr"] < tmax:
                 # Only store observations which are during the ROI for scheduling
                 scheduled_passes.append(satpass)
         return scheduled_passes
 
     def stop_criterion_callback(data):
         # Last fetched observation is older than the ROI for scheduling, end loop.
-        end_time = datetime.strptime(data[-1]['end'].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
+        end_time = datetime.strptime(data[-1]["end"].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
         return end_time < tmin
 
     return get_paginated_endpoint(
-        f'{settings.NETWORK_BASE_URL}/api/observations/?ground_station={ground_station}',
+        f"{settings.NETWORK_BASE_URL}/api/observations/?ground_station={ground_station}",
         filter_output_callback=filter_callback,
-        stop_criterion_callback=stop_criterion_callback)
+        stop_criterion_callback=stop_criterion_callback,
+    )
 
 
 def get_groundstation_info(ground_station_id):
@@ -224,12 +222,13 @@ def get_groundstation_info(ground_station_id):
     (dict): The requested ground station information or None
     """
     stations = get_paginated_endpoint(
-        f'{settings.NETWORK_BASE_URL}/api/stations/?id={ground_station_id}')
+        f"{settings.NETWORK_BASE_URL}/api/stations/?id={ground_station_id}"
+    )
 
-    selected_stations = list(filter(lambda s: s['id'] == ground_station_id, stations))
+    selected_stations = list(filter(lambda s: s["id"] == ground_station_id, stations))
 
     if not selected_stations:
-        logger.info('No ground station information found!')
+        logger.info("No ground station information found!")
         # Exit if no ground station found
         return None
 
@@ -248,15 +247,19 @@ def check_station_availability(station, allow_testing):
     allow_testing (bool): If true the station is considered available for scheduling
                           also when the station status is testing
     """
-    if station['status'] == 'Online' or (station['status'] == 'Testing' and allow_testing):
+    if station["status"] == "Online" or (station["status"] == "Testing" and allow_testing):
         return True
 
-    if station['status'] == 'Testing' and not allow_testing:
-        logger.info(f"Ground station {station['id']} is in testing mode but auto-scheduling is not "
-                    "allowed. Use -T command line argument to enable scheduling.")
+    if station["status"] == "Testing" and not allow_testing:
+        logger.info(
+            f"Ground station {station['id']} is in testing mode but auto-scheduling is not "
+            "allowed. Use -T command line argument to enable scheduling."
+        )
     else:
-        logger.info(f"Ground station {station['id']} neither in 'online' nor in 'testing' mode, "
-                    "can't schedule!")
+        logger.info(
+            f"Ground station {station['id']} neither in 'online' nor in 'testing' mode, "
+            "can't schedule!"
+        )
     return False
 
 
@@ -268,24 +271,29 @@ def handle_scheduling_error(response, exception):
     try:
         response_json = response.json()
     except json.decoder.JSONDecodeError:
-        logger.error('Malformed server response.')
+        logger.error("Malformed server response.")
         return
 
     if isinstance(response_json, dict):
-        if response_json.get('detail') == 'Invalid token.':
-            logger.error('Invalid SATNOGS_API_TOKEN, Please check your configuration; Exiting.')
+        if response_json.get("detail") == "Invalid token.":
+            logger.error("Invalid SATNOGS_API_TOKEN, Please check your configuration; Exiting.")
             sys.exit(1)
 
-        if 'non_field_errors' in response_json and response_json['non_field_errors'][
-                0][:38] == 'No permission to schedule observations':
+        if (
+            "non_field_errors" in response_json
+            and response_json["non_field_errors"][0][:38]
+            == "No permission to schedule observations"
+        ):
             # Typical server response: 'No permission to schedule observations on station: 42'
             logger.error(f'Sever response: {response_json["non_field_errors"][0]}')
-            logger.info("note: This permission error might be specific to only this "
-                        "(station, satellite, transmitter) pair.")
+            logger.info(
+                "note: This permission error might be specific to only this "
+                "(station, satellite, transmitter) pair."
+            )
             return
 
     if response_json:
-        logger.error(f'Server response: {response_json}')
+        logger.error(f"Server response: {response_json}")
         return
 
     logger.error(str(exception))
@@ -297,10 +305,10 @@ def serialize_observation(satpass):
     the scheduling endpoint in SatNOGS Network
     """
     return {
-        'ground_station': satpass['ground_station_id'],
-        'transmitter_uuid': satpass['transmitter_uuid'],
-        'start': satpass['start'].strftime("%Y-%m-%d %H:%M:%S"),
-        'end': satpass['end'].strftime("%Y-%m-%d %H:%M:%S")
+        "ground_station": satpass["ground_station_id"],
+        "transmitter_uuid": satpass["transmitter_uuid"],
+        "start": satpass["start"].strftime("%Y-%m-%d %H:%M:%S"),
+        "end": satpass["end"].strftime("%Y-%m-%d %H:%M:%S"),
     }
 
 
@@ -319,17 +327,19 @@ def schedule_observations_batch(observations):
     observations_serialized = list(serialize_observation(satpass) for satpass in observations)
 
     try:
-        response = requests.post(f'{settings.NETWORK_BASE_URL}/api/observations/',
-                                 json=observations_serialized,
-                                 headers={'Authorization': f'Token {settings.SATNOGS_API_TOKEN}'})
+        response = requests.post(
+            f"{settings.NETWORK_BASE_URL}/api/observations/",
+            json=observations_serialized,
+            headers={"Authorization": f"Token {settings.SATNOGS_API_TOKEN}"},
+        )
         response.raise_for_status()
         logger.debug(f"Scheduled {len(observations_serialized)} passes!")
     except requests.RequestException as exception:
-        logger.error('Failed to batch-schedule observations.')
+        logger.error("Failed to batch-schedule observations.")
 
         handle_scheduling_error(response, exception)
 
-        logger.info('Fall-back to single-pass scheduling...')
+        logger.info("Fall-back to single-pass scheduling...")
         for observation in observations:
             schedule_observation(observation)
 
@@ -347,9 +357,11 @@ def schedule_observation(observation):
     # pylint: disable=missing-timeout
 
     try:
-        response = requests.post(f'{settings.NETWORK_BASE_URL}/api/observations/',
-                                 json=[serialize_observation(observation)],
-                                 headers={'Authorization': f'Token {settings.SATNOGS_API_TOKEN}'})
+        response = requests.post(
+            f"{settings.NETWORK_BASE_URL}/api/observations/",
+            json=[serialize_observation(observation)],
+            headers={"Authorization": f"Token {settings.SATNOGS_API_TOKEN}"},
+        )
         response.raise_for_status()
         logger.info(f"Scheduled pass at {observation['start']:%Y-%m-%dT%H:%M:%S}!")
     except requests.RequestException as exception:

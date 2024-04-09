@@ -5,8 +5,13 @@ import sys
 from datetime import datetime, timedelta
 
 from auto_scheduler import settings
-from auto_scheduler.satnogs_client import APIRequestError, get_active_transmitter_info, \
-    get_satellite_info, get_tles, get_transmitter_stats
+from auto_scheduler.satnogs_client import (
+    APIRequestError,
+    get_active_transmitter_info,
+    get_satellite_info,
+    get_tles,
+    get_transmitter_stats,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +25,7 @@ class CacheManager:
     - receivable by the station
     - not a temporary norad id
     """
+
     # pylint: disable=too-many-instance-attributes
     transmitters_stats = None
     transmitters_receivable = None
@@ -28,8 +34,12 @@ class CacheManager:
     satellites_by_norad_id = None
     tles_all = None
     required_files = [
-        "transmitters_file", "transmitters2_file", "tles_file", "transmitters_stats_file",
-        "satellites_file", "satellites2_file"
+        "transmitters_file",
+        "transmitters2_file",
+        "tles_file",
+        "transmitters_stats_file",
+        "satellites_file",
+        "satellites2_file",
     ]
 
     def __init__(self, ground_station_id, ground_station_antennas, cache_dir, cache_age):
@@ -39,10 +49,12 @@ class CacheManager:
         self.cache_dir = cache_dir
         self.cache_age = cache_age
 
-        self.transmitters_file = os.path.join(self.cache_dir,
-                                              f"transmitters_{self.ground_station_id}.txt")
-        self.transmitters2_file = os.path.join(self.cache_dir,
-                                               f"transmitters_{self.ground_station_id}.json")
+        self.transmitters_file = os.path.join(
+            self.cache_dir, f"transmitters_{self.ground_station_id}.txt"
+        )
+        self.transmitters2_file = os.path.join(
+            self.cache_dir, f"transmitters_{self.ground_station_id}.json"
+        )
         self.last_update_file = os.path.join(self.cache_dir, f"last_update_{ground_station_id}.txt")
 
         self.tles_file = os.path.join(self.cache_dir, "tles.json")
@@ -92,16 +104,16 @@ class CacheManager:
         tnow = datetime.now()
 
         if force or self.update_needed():
-            logging.info('Update satellites, transmitters and TLEs:')
+            logging.info("Update satellites, transmitters and TLEs:")
             self.fetch_satellites()
             self.fetch_transmitters_receivable()
             self.fetch_tles()
 
             # Store current time
             with open(self.last_update_file, "w") as fp_last_update:
-                fp_last_update.write(f'{tnow:%Y-%m-%dT%H:%M:%S}\n')
+                fp_last_update.write(f"{tnow:%Y-%m-%dT%H:%M:%S}\n")
         else:
-            logging.info('Using cached satellites, transmitters and TLEs.')
+            logging.info("Using cached satellites, transmitters and TLEs.")
 
             def key2int(dict_object):
                 """
@@ -130,7 +142,7 @@ class CacheManager:
         if force or self.transmitters_stats_update_needed():
             self.fetch_transmitters_stats()
         else:
-            logging.info('Using cached transmitter statistics.')
+            logging.info("Using cached transmitter statistics.")
             with open(self.transmitters_stats_file) as fp_transmitters_stats:
                 self.transmitters_stats = json.load(fp_transmitters_stats)
 
@@ -149,16 +161,17 @@ class CacheManager:
 
     def fetch_transmitters_stats(self):
         logging.info(
-            "Download transmitter statistics from SatNOGS Network (this will take some minutes)...")
+            "Download transmitter statistics from SatNOGS Network (this will take some minutes)..."
+        )
         try:
             transmitters_stats_list = get_transmitter_stats()
         except APIRequestError:
-            logging.error('Download from SatNOGS Network failed.')
+            logging.error("Download from SatNOGS Network failed.")
             sys.exit(1)
 
         self.transmitters_stats = {}
         for transmitter in transmitters_stats_list:
-            self.transmitters_stats[transmitter['uuid']] = transmitter['stats']
+            self.transmitters_stats[transmitter["uuid"]] = transmitter["stats"]
 
         with open(self.transmitters_stats_file, "w") as fp_transmitters_stats:
             json.dump(self.transmitters_stats, fp_transmitters_stats, indent=2)
@@ -174,10 +187,10 @@ class CacheManager:
           the mapping between norad id and sat id
         """
         try:
-            logger.info('Download satellite information from SatNOGS DB...')
+            logger.info("Download satellite information from SatNOGS DB...")
             satellites_list = get_satellite_info()
         except APIRequestError:
-            logger.error('Download from SatNOGS DB failed.')
+            logger.error("Download from SatNOGS DB failed.")
             sys.exit(1)
 
         satellites_by_sat_id = {}
@@ -186,25 +199,27 @@ class CacheManager:
         norad_cat_ids_alive = []
 
         for satellite in satellites_list:
-            if satellite['norad_cat_id'] in norad_to_sat_id:
+            if satellite["norad_cat_id"] in norad_to_sat_id:
                 logger.warning(
                     'Duplicated NORAD ID found! '
                     f'{satellite["sat_id"]}  vs '
-                    f'{satellites_by_sat_id[norad_to_sat_id[satellite["norad_cat_id"]]]}')
+                    f'{satellites_by_sat_id[norad_to_sat_id[satellite["norad_cat_id"]]]}'
+                )
                 continue
 
-            if satellite['norad_cat_id'] is None:
+            if satellite["norad_cat_id"] is None:
                 logger.debug(
                     f'INFO: Skip Satellite {satellite["sat_id"]} with missing NORAD ID '
-                    'since having an assigned or temporary NORAD ID is required for scheduling.')
+                    'since having an assigned or temporary NORAD ID is required for scheduling.'
+                )
                 continue
 
-            satellites_by_sat_id[satellite['sat_id']] = satellite
-            norad_to_sat_id[satellite['norad_cat_id']] = satellite['sat_id']
+            satellites_by_sat_id[satellite["sat_id"]] = satellite
+            norad_to_sat_id[satellite["norad_cat_id"]] = satellite["sat_id"]
 
             # DEPRECATED:
             # Search satellites which have a norad_cat_id and are alive, indexed by norad id
-            if satellite['norad_cat_id'] is None:
+            if satellite["norad_cat_id"] is None:
                 continue
             if not satellite["status"] == "alive":
                 continue
@@ -212,7 +227,7 @@ class CacheManager:
             norad_cat_ids_alive.append(satellite["norad_cat_id"])
             satellites_by_norad_id[satellite["norad_cat_id"]] = satellite
 
-        data = {'satellites': satellites_by_sat_id, 'norad_to_sat_id': norad_to_sat_id}
+        data = {"satellites": satellites_by_sat_id, "norad_to_sat_id": norad_to_sat_id}
         with open(self.satellites2_file, "w") as fp_satellites:
             json.dump(data, fp_satellites, indent=2)
 
@@ -229,19 +244,22 @@ class CacheManager:
         self.transmitters_receivable = {}
 
         for antenna in self.ground_station_antennas:
-            logging.info('Download list of active transmitters between '
-                         f'{antenna["frequency"] * 1e-6:.0f} and '
-                         f'{antenna["frequency_max"] * 1e-6:.0f} MHz from SatNOGS DB...')
+            logging.info(
+                'Download list of active transmitters between '
+                f'{antenna["frequency"] * 1e-6:.0f} and '
+                f'{antenna["frequency_max"] * 1e-6:.0f} MHz from SatNOGS DB...'
+            )
 
             try:
-                transmitters = get_active_transmitter_info(antenna["frequency"],
-                                                           antenna["frequency_max"])
+                transmitters = get_active_transmitter_info(
+                    antenna["frequency"], antenna["frequency_max"]
+                )
             except APIRequestError:
                 logging.error("Download from SatNOGS DB failed.")
                 sys.exit(1)
 
             for transmitter in transmitters:
-                self.transmitters_receivable[transmitter['uuid']] = transmitter
+                self.transmitters_receivable[transmitter["uuid"]] = transmitter
 
         with open(self.transmitters2_file, "w") as fp_transmitters2:
             json.dump(self.transmitters_receivable, fp_transmitters2, indent=2)
@@ -249,9 +267,12 @@ class CacheManager:
     def update_transmitters(self):
         # Extract NORAD IDs from transmitters
         self.norad_cat_ids_of_interest = sorted(
-            set(transmitter["norad_cat_id"]
+            set(
+                transmitter["norad_cat_id"]
                 for transmitter in self.transmitters_receivable.values()
-                if transmitter["norad_cat_id"] in self.norad_cat_ids_alive))
+                if transmitter["norad_cat_id"] in self.norad_cat_ids_alive
+            )
+        )
 
         # Store transmitters
         with open(self.transmitters_file, "w") as fp_transmitters:
@@ -262,16 +283,24 @@ class CacheManager:
                     continue
 
                 # Skip dead satellites
-                if self.transmitters_receivable[uuid][
-                        "norad_cat_id"] not in self.norad_cat_ids_alive:
+                if (
+                    self.transmitters_receivable[uuid]["norad_cat_id"]
+                    not in self.norad_cat_ids_alive
+                ):
                     continue
 
                 # pylint: disable=consider-using-f-string
                 fp_transmitters.write(
-                    "%05d %s %d %d %d %s\n" %
-                    (self.transmitters_receivable[uuid]["norad_cat_id"], uuid,
-                     stats["success_rate"], stats["good_count"], stats["total_count"],
-                     self.transmitters_receivable[uuid]["mode"]))
+                    "%05d %s %d %d %d %s\n"
+                    % (
+                        self.transmitters_receivable[uuid]["norad_cat_id"],
+                        uuid,
+                        stats["success_rate"],
+                        stats["good_count"],
+                        stats["total_count"],
+                        self.transmitters_receivable[uuid]["mode"],
+                    )
+                )
 
     def fetch_tles(self):
         """
@@ -287,16 +316,18 @@ class CacheManager:
         number of requested objects (slow, DEPRECATED)
         """
         if not settings.SATNOGS_DB_API_TOKEN:
-            logging.error('The previous method of fetching TLEs from various sorces was removed. '
-                          'Please configure SATNOGS_DB_API_TOKEN to enable the new method of '
-                          'fetching TLEs from SatNOGS DB! ')
+            logging.error(
+                "The previous method of fetching TLEs from various sorces was removed. "
+                "Please configure SATNOGS_DB_API_TOKEN to enable the new method of "
+                "fetching TLEs from SatNOGS DB! "
+            )
 
         # Method 1: Use authenticated SatNOGS DB access
-        logging.info('Download TLEs from SatNOGS DB...')
+        logging.info("Download TLEs from SatNOGS DB...")
         try:
             self.tles_all = get_tles()
         except APIRequestError:
-            logging.error('Download from SatNOGS DB failed.')
+            logging.error("Download from SatNOGS DB failed.")
             sys.exit(1)
 
         with open(self.tles_file, "w") as fp_tles:
@@ -306,7 +337,7 @@ class CacheManager:
         """
         Flush the cache so a current set of transmitters, satellites and TLE can be downloaded.
         """
-        logging.info('Flushing cache.')
+        logging.info("Flushing cache.")
         cache = [
             self.transmitters_file,
             self.transmitters2_file,

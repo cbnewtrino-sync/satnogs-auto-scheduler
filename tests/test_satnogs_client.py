@@ -2,8 +2,14 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from auto_scheduler.satnogs_client import get_active_transmitter_info, get_groundstation_info, \
-    get_satellite_info, get_scheduled_passes_from_network, get_tles, get_transmitter_stats
+from auto_scheduler.satnogs_client import (
+    get_active_transmitter_info,
+    get_groundstation_info,
+    get_satellite_info,
+    get_scheduled_passes_from_network,
+    get_tles,
+    get_transmitter_stats,
+)
 
 
 def test_get_groundstation_info():
@@ -18,8 +24,8 @@ def test_get_groundstation_info():
     ground_station = get_groundstation_info(ground_station_id)
 
     assert isinstance(ground_station, dict)
-    assert 'id' in ground_station
-    assert ground_station['id'] == ground_station_id
+    assert "id" in ground_station
+    assert ground_station["id"] == ground_station_id
 
 
 def test_get_satellite_info():
@@ -29,7 +35,7 @@ def test_get_satellite_info():
     satellites_list = get_satellite_info()
 
     assert isinstance(satellites_list, list)
-    assert 'norad_cat_id' in satellites_list[0]
+    assert "norad_cat_id" in satellites_list[0]
 
 
 def test_get_active_transmitter_info():
@@ -37,9 +43,9 @@ def test_get_active_transmitter_info():
     transmitters = get_active_transmitter_info(fmin, fmax)
     assert isinstance(transmitters, list)
     assert isinstance(transmitters[0], dict)
-    assert 'mode' in transmitters[0]
-    assert 'norad_cat_id' in transmitters[0]
-    assert 'uuid' in transmitters[0]
+    assert "mode" in transmitters[0]
+    assert "norad_cat_id" in transmitters[0]
+    assert "uuid" in transmitters[0]
 
 
 def test_get_tles():
@@ -65,25 +71,19 @@ def test_get_scheduled_passes_from_network():
     """
     # Input
     ground_station_id = 2
-    tmin = datetime.fromisoformat('2023-02-09T19:42:47')
-    tmax = datetime.fromisoformat('2023-02-09T20:12:47')
+    tmin = datetime.fromisoformat("2023-02-09T19:42:47")
+    tmax = datetime.fromisoformat("2023-02-09T20:12:47")
 
     # Output
     pass_result = {
-        'altt': 14.0,
-        'priority': 1,
-        'satellite': {
-            'id': 55123,
-            'name': ''
-        },
-        'scheduled': True,
-        'td': timedelta(seconds=380),
-        'tr': datetime(2023, 2, 9, 19, 38, 56),
-        'transmitter': {
-            'mode': '',
-            'uuid': 'eQnHaHRLfpdRtLHGSbrt75'
-        },
-        'ts': datetime(2023, 2, 9, 19, 45, 16)
+        "altt": 14.0,
+        "priority": 1,
+        "satellite": {"id": 55123, "name": ""},
+        "scheduled": True,
+        "td": timedelta(seconds=380),
+        "tr": datetime(2023, 2, 9, 19, 38, 56),
+        "transmitter": {"mode": "", "uuid": "eQnHaHRLfpdRtLHGSbrt75"},
+        "ts": datetime(2023, 2, 9, 19, 45, 16),
     }
 
     scheduledpasses = get_scheduled_passes_from_network(ground_station_id, tmin, tmax)

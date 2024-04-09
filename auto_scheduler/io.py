@@ -18,21 +18,23 @@ def read_transmitters_of_interest(filename):
     with open(filename, "r") as fp_transmitters:
         for line in fp_transmitters.readlines():
             item = line.split()
-            transmitters_stats.append({
-                "norad_cat_id": int(item[0]),
-                "uuid": item[1],
-                "success_rate": float(item[2]) / 100.0,
-                "good_count": int(item[3]),
-                "data_count": int(item[4]),
-                "mode": item[5]
-            })
+            transmitters_stats.append(
+                {
+                    "norad_cat_id": int(item[0]),
+                    "uuid": item[1],
+                    "success_rate": float(item[2]) / 100.0,
+                    "good_count": int(item[3]),
+                    "data_count": int(item[4]),
+                    "mode": item[5],
+                }
+            )
     return transmitters_stats
 
 
 def strip_comments(csv_file):
     # source: https://stackoverflow.com/a/50592259
     for row in csv_file:
-        raw = row.split('#')[0].strip()
+        raw = row.split("#")[0].strip()
         if raw:
             yield raw
 
@@ -43,24 +45,26 @@ def read_priorities_transmitters(filename):
     #   43017 1. KgazZMKEa74VnquqXLwAvD
 
     if not filename:
-        logger.debug('No priority file defined.')
+        logger.debug("No priority file defined.")
         return ({}, {})
 
     if not os.path.exists(filename):
         # No priorites file found, return empty objects
-        logger.warning('Could not read priority file %s.', filename)
+        logger.warning("Could not read priority file %s.", filename)
         return ({}, {})
 
     priorities = {}
     transmitters = {}
     with open(filename, "r") as fp_priorities:
-        reader = csv.reader(strip_comments(fp_priorities), delimiter=' ')
+        reader = csv.reader(strip_comments(fp_priorities), delimiter=" ")
         for row in reader:
             if len(row) != 3:
                 # Skip malformed lines
                 logger.warning(
-                    'Malformed line in priority file %s,\n expected 3 parameters but found %d',
-                    filename, len(row))
+                    "Malformed line in priority file %s,\n expected 3 parameters but found %d",
+                    filename,
+                    len(row),
+                )
                 continue
 
             norad_id, prio, transmitter = row
@@ -87,4 +91,4 @@ def read_tles(tles_file):
             else:
                 norad_cat_id = int(tle1.split(" ")[1][:5])
 
-            yield {'norad_cat_id': norad_cat_id, 'tle0': tle0, 'tle1': tle1, 'tle2': tle2}
+            yield {"norad_cat_id": norad_cat_id, "tle0": tle0, "tle1": tle1, "tle2": tle2}
