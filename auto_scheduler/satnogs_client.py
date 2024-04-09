@@ -1,3 +1,4 @@
+import json
 import logging
 import sys
 from datetime import datetime
@@ -259,40 +260,35 @@ def check_station_availability(station, allow_testing):
     return False
 
 
-def handle_batch_scheduling_error(err):
+def handle_scheduling_error(response, exception):
     """
-    Error handling of errors occuring during batch Observation scheduling
+    Error handling of errors occuring during Observation scheduling
     via the SatNOGS Network API.
     """
+    try:
+        response_json = response.json()
+    except json.decoder.JSONDecodeError:
+        logger.error('Malformed server response.')
+        return
 
-    logger.error('Failed to batch-schedule observations.')
+    if isinstance(response_json, dict):
+        if response_json.get('detail') == 'Invalid token.':
+            logger.error('Invalid SATNOGS_API_TOKEN, Please check your configuration; Exiting.')
+            sys.exit(1)
 
-    if err.get('detail') == 'Invalid token.':
-        logger.error('Invalid SATNOGS_API_TOKEN, Please check your configuration; Exiting.')
-        sys.exit(1)
+        if 'non_field_errors' in response_json and response_json['non_field_errors'][
+                0][:38] == 'No permission to schedule observations':
+            # Typical server response: 'No permission to schedule observations on station: 42'
+            logger.error(f'Sever response: {response_json["non_field_errors"][0]}')
+            logger.info("note: This permission error might be specific to only this "
+                        "(station, satellite, transmitter) pair.")
+            return
 
-    if 'non_field_errors' in err and err['non_field_errors'][
-            0][:38] == 'No permission to schedule observations':
-        # Typical server response: 'No permission to schedule observations on station: 42'
-        logger.error(f'Sever response: {err["non_field_errors"][0]}')
-        logger.info("note: This permission error might be specific to only this "
-                    "(station, satellite, transmitter) pair.")
-    else:
-        logger.error(f'Server response: {err}')
+    if response_json:
+        logger.error(f'Server response: {response_json}')
+        return
 
-
-def handle_single_scheduling_error(observation, err):
-    """
-    Error handling of errors occuring during single-observation scheduling
-    via the SatNOGS Network API.
-    """
-    logger.error(f"Failed to schedule pass at {observation['start']:%Y-%m-%dT%H:%M:%S}.")
-    if 'non_field_errors' in err:
-        logger.error(f"{err['non_field_errors'][0]}.")
-        logger.info("note: This error might be specific to only this "
-                    "(station, satellite, transmitter) pair.")
-    else:
-        logger.error(f"{err}.")
+    logger.error(str(exception))
 
 
 def serialize_observation(satpass):
@@ -328,9 +324,10 @@ def schedule_observations_batch(observations):
                                  headers={'Authorization': f'Token {settings.SATNOGS_API_TOKEN}'})
         response.raise_for_status()
         logger.debug(f"Scheduled {len(observations_serialized)} passes!")
-    except requests.HTTPError:
-        err = response.json()
-        handle_batch_scheduling_error(err)
+    except requests.RequestException as exception:
+        logger.error('Failed to batch-schedule observations.')
+
+        handle_scheduling_error(response, exception)
 
         logger.info('Fall-back to single-pass scheduling...')
         for observation in observations:
@@ -355,6 +352,7 @@ def schedule_observation(observation):
                                  headers={'Authorization': f'Token {settings.SATNOGS_API_TOKEN}'})
         response.raise_for_status()
         logger.info(f"Scheduled pass at {observation['start']:%Y-%m-%dT%H:%M:%S}!")
-    except requests.HTTPError:
-        err = response.json()
-        handle_single_scheduling_error(observation, err)
+    except requests.RequestException as exception:
+        logger.error(f"Failed to schedule pass at {observation['start']:%Y-%m-%dT%H:%M:%S}.")
+
+        handle_scheduling_error(response, exception)
