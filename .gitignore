@@ -5,3 +5,4 @@ __pycache__/
 .env
 .tox/
 build/
+auto_scheduler/_version.py

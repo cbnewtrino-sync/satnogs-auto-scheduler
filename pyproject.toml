@@ -1,0 +1,57 @@
+[build-system]
+requires = [ "hatchling", "hatch-vcs" ]
+build-backend = "hatchling.build"
+
+[project]
+name = "satnogs-auto-scheduler"
+dynamic = ["version"]
+description = "SatNOGS Auto Scheduler"
+readme = "README.md"
+authors = [
+    { name = "SatNOGS project", email = "dev@satnogs.org" },
+]
+Home-page = "https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler"
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Telecommunications Industry",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Topic :: Communications :: Ham Radio",
+]
+dependencies = [
+    # Basic
+    "requests~=2.25.1",
+    "python-decouple~=3.7",
+    "tqdm~=4.64.1",
+    # Astronomy
+    "ephem~=3.7.7.1",
+    "satellitetle~=0.11.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit~=3.0.4",
+    "pytest~=7.2.1",
+    "tomli~=2.0.1", # only needed with Python<=3.10
+]
+
+[project.scripts]
+schedule_single_station = "auto_scheduler.cli.schedule_single_station:main"
+satnogs_auto_scheduler_setup = "auto_scheduler.cli.satnogs_auto_scheduler_setup:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.sdist]
+only-include = [ "auto_scheduler", "tests" ]
+
+[tool.hatch.build.targets.wheel]
+only-include = [ "auto_scheduler" ]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "auto_scheduler/_version.py"
