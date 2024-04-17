@@ -88,8 +88,11 @@ def get_paginated_endpoint(
             if stop_criterion_callback and stop_criterion_callback(new_data):
                 break
     except requests.HTTPError as exception:
-        err = response.json()
-        logger.error(f"API Request for {url} failed, error: {err}")
+        try:
+            err = response.json()
+            logger.error(f"API Request for {url} failed, error: {err}")
+        except json.decoder.JSONDecodeError:
+            logger.error(f"API Request for {url} failed; HTTPError: {exception} ")
         raise APIRequestError from exception
     except requests.exceptions.ReadTimeout as exception:
         logger.error(f"Timeout after {TIMEOUT} seconds while requesting {url}")
