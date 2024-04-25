@@ -1,5 +1,9 @@
 # Changelog
 
+## unreleased
+
+- Introduced ruff as linter and code formatter, dropped flake8, isort yapf & pylint
+
 ## 0.3.1 - 2023-11-08
 
 - Removed broken check if the configuration file exists,
