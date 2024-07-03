@@ -3,7 +3,7 @@ services:
   satnogs_auto_scheduler:
     build:
       context: .
-    image: satnogs-auto-scheduler'
+    image: satnogs-auto-scheduler
     user: '999'
     read_only: true
     command: "schedule_single_station.py --help"
