@@ -15,12 +15,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-FROM python:3.9-slim
+FROM python:3.11-slim
 LABEL org.opencontainers.image.authors='sa2kng <knegge@gmail.com>'
 
 ARG SATNOGS_CLIENT_UID=999
 ARG SATNOGS_CLIENT_NAME=satnogs-client
 ARG SATNOGS_CLIENT_VARSTATEDIR=/var/lib/satnogs-client
+
 
 # Add unprivileged system user
 RUN groupadd -r -g ${SATNOGS_CLIENT_UID} ${SATNOGS_CLIENT_NAME} \
@@ -34,14 +35,9 @@ RUN groupadd -r -g ${SATNOGS_CLIENT_UID} ${SATNOGS_CLIENT_NAME} \
 # Create application varstate directory
 RUN install -d -o ${SATNOGS_CLIENT_UID} -g ${SATNOGS_CLIENT_UID} ${SATNOGS_CLIENT_VARSTATEDIR}
 
-# Copy source code
-COPY . /usr/local/src/satnogs-auto-scheduler/
-
-# Install Python dependencies and application
-RUN echo "[global]" > /etc/pip.conf \
-	&& echo "extra-index-url=https://www.piwheels.org/simple" >> /etc/pip.conf \
-	&& pip install --no-cache-dir --prefer-binary \
-		/usr/local/src/satnogs-auto-scheduler
+RUN --mount=source=dist,target=/dist \
+    PYTHONDONTWRITEBYTECODE=1 \
+    pip install /dist/*.whl
 
 USER ${SATNOGS_CLIENT_NAME}
 WORKDIR ${SATNOGS_CLIENT_VARSTATEDIR}
