@@ -1,7 +1,8 @@
 variables:
-  GITLAB_CI_IMAGE_PYTHON3: 'python:3.8'
-  GITLAB_CI_PYPI_TOX: 'tox~=3.24.0'
-  GITLAB_CI_PYPI_RUFF: 'ruff~=0.3.5'
+  GITLAB_CI_IMAGE_PYTHON3: 'python:3.11'
+  GITLAB_CI_PYPI_TOX: 'tox~=4.17.1'
+  GITLAB_CI_PYPI_RUFF: 'ruff~=0.5.7'
+  GITLAB_CI_PYPI_HATCH: 'hatch~=1.12.0'
 
   GITLAB_CI_DOCKER_BUILDX_PLATFORMS: 'linux/amd64,linux/arm/v7,linux/arm64'
   GITLAB_CI_DOCKER_IMAGE_NAME: 'satnogs-auto-scheduler'
@@ -10,6 +11,7 @@ variables:
 
 stages:
   - static
+  - build
   - deploy
 
 include:
@@ -36,8 +38,18 @@ test:
   script:
     - tox -e "pytest"
 
+build:
+  stage: build
+  image: ${GITLAB_CI_IMAGE_PYTHON3}
+  before_script:
+    - pip install "$GITLAB_CI_PYPI_HATCH"
+  script:
+    - hatch build
+  artifacts:
+    paths:
+    - dist/
+
 docker:
   stage: deploy
-  dependencies: []
   variables:
     GITLAB_CI_DOCKER_IMAGE_VERSION: '${CI_COMMIT_REF_NAME}'
