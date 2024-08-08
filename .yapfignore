@@ -1,5 +1,0 @@
-auto_scheduler/_version.py
-.tox
-build
-docs
-versioneer.py
