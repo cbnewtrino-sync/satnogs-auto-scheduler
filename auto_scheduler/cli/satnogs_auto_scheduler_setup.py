@@ -88,6 +88,10 @@ def write_env_file(config, filename=".env"):
     print(f"Configuration has been successfully written to: {os.path.realpath(path)}")
 
 
-if __name__ == "__main__":
+def main():
     new_config = get_tokens()
     write_env_file(new_config)
+
+
+if __name__ == "__main__":
+    main()
