@@ -1,2 +1,0 @@
-include versioneer.py
-include auto_scheduler/_version.py

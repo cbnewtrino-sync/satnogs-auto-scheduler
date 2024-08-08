@@ -1,2 +1,1 @@
 line-length = 100
-exclude = ["versioneer.py", "_version.py"]
