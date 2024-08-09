@@ -1,3 +1,8 @@
+import inspect
+import contextlib
+
+from tqdm import tqdm
+
 from auto_scheduler import Satellite
 
 
@@ -174,3 +179,25 @@ def print_scheduledpass_summary(
             f"{'Y' if sat_entry['is_frequency_violator'] else 'N':6s} | "
             f"{sat_entry['name']:s}"
         )
+
+
+@contextlib.contextmanager
+def print_using_tqdm():
+    _print = print
+
+    def print2(obj, *, end="\n", file=None):
+        """
+        original signature:
+            print(*objects, *, sep=' ', end='\n', file=None, flush=False)
+        """
+        try:
+            tqdm.write(obj, end=end, file=file)
+        except OSError:
+            # Try to use original print instead
+            _print(obj, end=end, file=file)
+
+    try:
+        inspect.builtins.print = print2
+        yield
+    finally:
+        inspect.builtins.print = _print

@@ -29,6 +29,7 @@ from auto_scheduler.utils import (
     print_scheduledpass_summary,
     satellites_from_transmitters,
     search_satellites,
+    print_using_tqdm,
 )
 
 _LOG_LEVEL_STRINGS = ["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
@@ -464,7 +465,8 @@ def schedule_single_station(
     )
     passes = []
     for satellite in tqdm(satellites, disable=None):
-        passes.extend(find_constrained_passes(satellite, observer, constraints))
+        with print_using_tqdm():
+            passes.extend(find_constrained_passes(satellite, observer, constraints))
 
     priorities, favorite_transmitters = read_priorities_transmitters(priorities_filename)
 
