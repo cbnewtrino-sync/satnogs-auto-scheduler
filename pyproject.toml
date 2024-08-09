@@ -28,7 +28,7 @@ dependencies = [
     "python-decouple~=3.7",
     "tqdm~=4.64.1",
     # Astronomy
-    "ephem~=3.7.7.1",
+    "ephem~=4.1.5",
     "satellitetle~=0.11.0",
 ]
 requires-python = ">=3.9"
