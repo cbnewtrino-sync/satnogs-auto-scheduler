@@ -205,7 +205,7 @@ def get_scheduled_passes_from_network(ground_station, tmin, tmax):
         return end_time < tmin
 
     return get_paginated_endpoint(
-        f"{settings.NETWORK_BASE_URL}/api/observations/?ground_station={ground_station}",
+        f"{settings.NETWORK_BASE_URL}/api/jobs/?ground_station={ground_station}",
         filter_output_callback=filter_callback,
         stop_criterion_callback=stop_criterion_callback,
     )

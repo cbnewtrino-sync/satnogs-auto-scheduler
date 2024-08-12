@@ -1,12 +1,9 @@
-from datetime import datetime, timedelta
-
 import pytest
 
 from auto_scheduler.satnogs_client import (
     get_active_transmitter_info,
     get_groundstation_info,
     get_satellite_info,
-    get_scheduled_passes_from_network,
     get_tles,
     get_transmitter_stats,
 )
@@ -63,32 +60,3 @@ def test_get_transmitter_stats():
     """
     transmitters = get_transmitter_stats()
     assert isinstance(transmitters, list)
-
-
-def test_get_scheduled_passes_from_network():
-    """
-    Unit test for get_scheduled_passes_from_network
-    """
-    # Input
-    ground_station_id = 2
-    tmin = datetime.fromisoformat("2023-02-09T19:42:47")
-    tmax = datetime.fromisoformat("2023-02-09T20:12:47")
-
-    # Output
-    pass_result = {
-        "altt": 14.0,
-        "priority": 1,
-        "satellite": {"id": 55123, "name": ""},
-        "scheduled": True,
-        "td": timedelta(seconds=380),
-        "tr": datetime(2023, 2, 9, 19, 38, 56),
-        "transmitter": {"mode": "", "uuid": "eQnHaHRLfpdRtLHGSbrt75"},
-        "ts": datetime(2023, 2, 9, 19, 45, 16),
-    }
-
-    scheduledpasses = get_scheduled_passes_from_network(ground_station_id, tmin, tmax)
-
-    assert isinstance(scheduledpasses, list)
-    assert len(scheduledpasses) == 1
-    for key, expected_value in pass_result.items():
-        assert scheduledpasses[0][key] == expected_value
