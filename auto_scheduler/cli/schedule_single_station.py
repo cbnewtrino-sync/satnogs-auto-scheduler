@@ -51,7 +51,6 @@ def _log_level_string_to_int(log_level_string):
 
 def main():  # noqa: C901
     # pylint: disable=too-many-branches,too-many-statements,too-many-locals
-    settings.validate_config()
 
     # Parse arguments
     parser = argparse.ArgumentParser(
@@ -206,6 +205,8 @@ def main():  # noqa: C901
     if not isinstance(numeric_level, int):
         raise ValueError("Invalid log level")
     logging.basicConfig(level=numeric_level, format="%(message)s")
+
+    settings.validate_config()
 
     # Settings
     ground_station_id = args.station
