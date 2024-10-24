@@ -525,7 +525,3 @@ def schedule_single_station(
         schedule_observations_batch(observations)
 
     logging.info("Done.")
-
-
-if __name__ == "__main__":
-    main()
