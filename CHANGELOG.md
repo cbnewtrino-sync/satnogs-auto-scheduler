@@ -2,7 +2,42 @@
 
 ## unreleased
 
-- Introduced ruff as linter and code formatter, dropped flake8, isort yapf & pylint
+### Breaking Changes
+- Moved scripts (`schedule_single_station.py`) into the `auto_scheduler` package. The auto-scheduler must be installed now, running
+  `./schedule_single_station.py` will not work anymore. This change is motivated by consolidating all code in the `auto_scheduler` package.
+  Recommendation:
+  - Install [pipx](https://pipx.pypa.io/stable/installation/)
+  - Install the auto-scheduler (pipx will create and use an isolated environment, no manual handling of environments necessary anymore):
+    ```
+    $ pipx install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git
+      installed package satnogs-auto-scheduler 0.3.2.dev30+g6dd23ae, installed using Python 3.12.6
+      These apps are now globally available
+        - satnogs_auto_scheduler_setup
+        - schedule_single_station
+    done! ✨ 🌟 ✨
+    ```
+  - Run the auto-scheduler:
+    ```
+    $ schedule_single_station --version
+    satnogs-auto-scheduler 0.3.2.dev30+g6dd23ae
+    ```
+
+### Fixes
+- Fixed  scheduling API error handling code, no `AttributeError` on 404 Client errors anymore
+  ([ee5babe](https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler/-/commit/ee5babee46e221684a966da8ad6ac04a836b3d8d)))
+- Fixed version info display to be available even if the use configuration is currently invalid
+- Fixed stdout cluttering with progress bars in non-interactive terminals
+
+### Other Changes
+- Updated Python from 3.8 to 3.11
+- Fixed version information when running in docker container
+- Simplified Dockerfile
+- Modernized packaging: Introduced `pyproject.toml`, change build backend to `hatchling'
+- Removed vendorized `versioneer` package. This functionality is provided by the new build backend [Hatch](https://hatch.pypa.io/) now
+- Changed linter/formatter to ruff; this made all these previously used tools obsolete: flake8, isort, yapf and pylint
+- Changed CI to use the LSF gitlab-ci templates. This way maintainance of the CI is shared with other LSF projects
+- Enabled GitLab [Code Quality](https://docs.gitlab.com/ee/ci/testing/code_quality.html), linter/formatter errors will be shown in
+  Merge Requests now
 
 ## 0.3.1 - 2023-11-08
 

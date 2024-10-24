@@ -4,7 +4,26 @@ This is a tool to automatically compute passes of satellites and schedule observ
 [SatNOGS Network](https://network.satnogs.org/). It is based on the scheduling code from
 SatNOGS network and requires [python-satellitetle](https://gitlab.com/librespacefoundation/python-satellitetle) for downloading TLEs.
 
-## Installation
+## Installation (using pipx, recommended)
+
+Steps:
+- Install [pipx](https://pipx.pypa.io/stable/installation/)
+- Install the auto-scheduler (pipx will create and use an isolated environment, no manual handling of environments necessary anymore):
+  ```
+  $ pipx install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git
+    installed package satnogs-auto-scheduler 0.3.2.dev30+g6dd23ae, installed using Python 3.12.6
+    These apps are now globally available
+      - satnogs_auto_scheduler_setup
+      - schedule_single_station
+  done! ✨ 🌟 ✨
+  ```
+- Run the auto-scheduler:
+  ```
+  $ schedule_single_station --version
+  satnogs-auto-scheduler 0.3.2.dev30+g6dd23ae
+  ```
+
+## Installation (old)
 
 You will need Python 3 and the Python virtualenv utility. The following example assumes that you are using Debian.
 
@@ -19,9 +38,12 @@ pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-sch
 
 You can verify your installed version with the following command:
 ```
-$ schedule_single_station.py --version
+$ schedule_single_station --version
 satnogs-auto-scheduler 0.3
 ```
+
+NOTE: Previously, the command to run the auto-scheduler was `./schedule_single_station.py`. The suffix `.py` will be dropped in the
+upcoming release!
 
 NOTE: When installed via pip the auto-scheduler is started using `schedule_single_station.py` (it is available in the $PATH) instead
 of using `./schedule_single_station.py`.
@@ -85,7 +107,7 @@ The advantage of using a systemd-timer for invoking the auto-scheduler lies in t
    ```
    [Unit]
    Description=Schedule SatNOGS observations for 1.2h on station 132
-   
+
    [Service]
    Type=oneshot
    ExecStart=<path_to_auto_scheduler>/env/bin/python <path_to_auto_scheduler>/schedule_single_station.py -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -z
@@ -96,11 +118,11 @@ The advantage of using a systemd-timer for invoking the auto-scheduler lies in t
   ```
   [Unit]
   Description=Run satnogs-auto-scheduler hourly and on boot
-  
+
   [Timer]
   OnBootSec=2min
   OnUnitActiveSec=1h
-  
+
   [Install]
   WantedBy=timers.target
   ```
@@ -109,7 +131,7 @@ The advantage of using a systemd-timer for invoking the auto-scheduler lies in t
   ```bash
   sudo systemctl start satnogs-auto-scheduler.timer
   ```
-  
+
 - Enable the timer to be started on boot with
   ```bash
   sudo systemctl enable satnogs-auto-scheduler.timer
