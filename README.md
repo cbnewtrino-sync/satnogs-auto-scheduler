@@ -4,26 +4,8 @@ This is a tool to automatically compute passes of satellites and schedule observ
 [SatNOGS Network](https://network.satnogs.org/). It is based on the scheduling code from
 SatNOGS network and requires [python-satellitetle](https://gitlab.com/librespacefoundation/python-satellitetle) for downloading TLEs.
 
-## Installation (using pipx, recommended)
 
-Steps:
-- Install [pipx](https://pipx.pypa.io/stable/installation/)
-- Install the auto-scheduler (pipx will create and use an isolated environment, no manual handling of environments necessary anymore):
-  ```
-  $ pipx install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git
-    installed package satnogs-auto-scheduler 0.3.2.dev30+g6dd23ae, installed using Python 3.12.6
-    These apps are now globally available
-      - satnogs_auto_scheduler_setup
-      - schedule_single_station
-  done! ✨ 🌟 ✨
-  ```
-- Run the auto-scheduler:
-  ```
-  $ schedule_single_station --version
-  satnogs-auto-scheduler 0.3.2.dev30+g6dd23ae
-  ```
-
-## Installation (old)
+## Installation
 
 You will need Python 3 and the Python virtualenv utility. The following example assumes that you are using Debian.
 
