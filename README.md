@@ -24,17 +24,26 @@ $ schedule_single_station --version
 satnogs-auto-scheduler 0.3
 ```
 
-NOTE: Previously, the command to run the auto-scheduler was `./schedule_single_station.py`. The suffix `.py` will be dropped in the
-upcoming release!
+## Usage
 
-NOTE: When installed via pip the auto-scheduler is started using `schedule_single_station.py` (it is available in the $PATH) instead
-of using `./schedule_single_station.py`.
+### Current command (supported for now):
+
+```
+schedule_single_station.py [options]
+./schedule_single_station.py [options]  # Legacy method, works but may be missing version info
+```
+
+### New command (preferred):
+
+```
+schedule_single_station [options]
+```
 
 ## Configuration
 
 Run the following script:
 ```
-satnogs_auto_scheduler_setup.py
+satnogs_auto_scheduler_setup
 ```
 
 Follow the prompts to enter your SatNOGS DB and Network API tokens, The configuration file `.env` is generated.
@@ -46,13 +55,13 @@ NOTE: Since auto-scheduler version {unreleased} both SatNOGS Network & DB API To
 Perform a test run to download orbital elements and transmitter priorities (these are stored in `/tmp/cache`) with
 
 ```bash
-schedule_single_station.py -s <ground station ID> -n
+schedule_single_station -s <ground station ID> -n
 ```
 
 The `-n` option computes the passes but does not schedule them. To schedule these passes, run
 
 ```bash
-schedule_single_station.py -s <ground station ID>
+schedule_single_station -s <ground station ID>
 ```
 
 ## Setup priority scheduling
@@ -60,7 +69,7 @@ schedule_single_station.py -s <ground station ID>
 The script `contrib/gen_prio_file.sh` can be used to generate a list of transmitters for prioritization, selecting
 all DUV, BPSK1k2, BPSK9k6, [G]MSK and [G]FSK transmitters. To create the file `priorities_37.txt`, run
 ```
-schedule_single_station.py --station 37 -n
+schedule_single_station --station 37 -n
 contrib/gen_prio_file.sh 37 > priorities_37.txt
 ```
 
@@ -76,7 +85,7 @@ crontab -e
 
 Add a line like this - execute the scheduling script on each full hour:
 ```bash
-0 */1 * * * <path_to_auto_scheduler>/env/bin/python <path_to_auto_scheduler>/schedule_single_station.py -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -f -z
+0 */1 * * * <path_to_auto_scheduler>/env/bin/schedule_single_station -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -f -z
 ```
 
 Omit the `-f` option to also fill in the gaps, but be aware if using a rotator setup! This will wear-out your rotator very quickly!
@@ -92,7 +101,7 @@ The advantage of using a systemd-timer for invoking the auto-scheduler lies in t
 
    [Service]
    Type=oneshot
-   ExecStart=<path_to_auto_scheduler>/env/bin/python <path_to_auto_scheduler>/schedule_single_station.py -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -z
+   ExecStart=<path_to_auto_scheduler>/env/bin/schedule_single_station -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -z
    User=pi
    ```
 
@@ -128,7 +137,7 @@ sudo systemctl start satnogs-auto-scheduler.service
 
 The following command will list all available command-line arguments:
 ```bash
-schedule_single_station.py --help
+schedule_single_station --help
 ```
 
 ## License
