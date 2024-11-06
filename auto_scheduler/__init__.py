@@ -1,5 +1,6 @@
 from .satellite import Satellite  # noqa
 
-from . import _version
-
-__version__ = _version.__version__
+try:
+    from auto_scheduler._version import __version__
+except ModuleNotFoundError:
+    __version__ = "0.3.1-noinstall"
