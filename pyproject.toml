@@ -40,6 +40,8 @@ dev = [
 ]
 
 [project.scripts]
+"schedule_single_station.py" = "auto_scheduler.cli.schedule_single_station:main"
+"satnogs_auto_scheduler_setup.py" = "auto_scheduler.cli.satnogs_auto_scheduler_setup:main"
 schedule_single_station = "auto_scheduler.cli.schedule_single_station:main"
 satnogs_auto_scheduler_setup = "auto_scheduler.cli.satnogs_auto_scheduler_setup:main"
 
