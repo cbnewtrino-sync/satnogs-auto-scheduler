@@ -2,6 +2,16 @@
 
 ## unreleased
 
+### Changes
+
+#### Container Images
+
+Container images are now available at:
+- Docker Hub: `librespace/satnogs-auto-scheduler`
+- GitLab: `registry.gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler`
+
+Previously, only `master` tagged images were published to Docker Hub. Now both `master` and version-tagged images (e.g. `0.4.0`) are available.
+
 ### Fixes
 
 - Fixed scheduling API error handling to properly handle 404 responses without raising `AttributeError`
