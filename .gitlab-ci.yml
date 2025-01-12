@@ -47,7 +47,7 @@ build:
 docker:
   variables:
     GITLAB_CI_DOCKER_IMAGE_NAME: 'satnogs-auto-scheduler'
-    GITLAB_CI_DOCKER_BUILDX_PLATFORMS: 'linux/amd64,linux/arm64'
+    GITLAB_CI_DOCKER_BUILDX_PLATFORMS: 'linux/amd64,linux/arm64,linux/armhf'
     GITLAB_CI_DOCKER_PULL: '1'
   stage: deploy
   rules:
