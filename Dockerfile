@@ -15,6 +15,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+FROM python:3.11-slim AS builder
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+  --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get --no-install-recommends install -y git
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install build hatchling hatch-vcs
+
+WORKDIR /build
+COPY . .
+RUN --mount=type=bind,source=.git,target=.git \
+    rm -rf /dist/*.whl && \
+    python3 -m build --no-isolation --wheel --outdir /dist/
+
 FROM python:3.11-slim
 LABEL org.opencontainers.image.authors='sa2kng <knegge@gmail.com>'
 
@@ -35,11 +49,11 @@ RUN groupadd -r -g ${SATNOGS_CLIENT_UID} ${SATNOGS_CLIENT_NAME} \
 # Create application varstate directory
 RUN install -d -o ${SATNOGS_CLIENT_UID} -g ${SATNOGS_CLIENT_UID} ${SATNOGS_CLIENT_VARSTATEDIR}
 
-RUN --mount=source=dist,target=/dist \
+COPY --from=builder /dist/*.whl /dist/
+RUN --mount=type=cache,target=/root/.cache/pip \
     PYTHONDONTWRITEBYTECODE=1 \
     pip install /dist/*.whl
 
 USER ${SATNOGS_CLIENT_NAME}
 WORKDIR ${SATNOGS_CLIENT_VARSTATEDIR}
 CMD ["bash"]
-
