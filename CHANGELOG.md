@@ -10,7 +10,7 @@ Container images are now available at:
 - Docker Hub: `librespace/satnogs-auto-scheduler`
 - GitLab: `registry.gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler`
 
-Previously, only `master` tagged images were published to Docker Hub. Now both `master` and version-tagged images (e.g. `0.4.0`) are available.
+Previously, only `master` tagged images were published to Docker Hub. Now both `master` and version-tagged images (e.g. `0.4`) are available.
 
 ### Fixes
 
