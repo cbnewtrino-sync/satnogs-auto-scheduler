@@ -40,9 +40,23 @@ def strip_comments(csv_file):
 
 
 def read_priorities_transmitters(filename):
-    # Priorities and favorite transmitters
-    # read the following format
-    #   43017 1. KgazZMKEa74VnquqXLwAvD
+    """
+    Priorities and favorite transmitters
+
+    Columns: norad_cat_id, priority_factor, transmitter_uuid
+    Delimiter: ' '
+    Example file:
+        43017 1. KgazZMKEa74VnquqXLwAvD
+
+    Returns:
+        priorities (dict) - key: norad_cat_id, value: priority_factor
+        favorite_transmitters (dict) - key: norad_cat_id, value: transmitter_uuid
+    Example output:
+        (
+            {'35933': 1.0, '43186': 1.0},
+            {'35933': 'ZwdQUwqRbFETGnLAxoH9JF', '43186': 'BQHNVvqPs2Lniez5FbNckc'}
+        )
+    """
 
     if not filename:
         logger.debug("No priority file defined.")
