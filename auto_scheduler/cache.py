@@ -17,20 +17,10 @@ logger = logging.getLogger(__name__)
 
 
 class CacheManager:
-    """
-    ## Notes
-
-    norad_cat_ids_of_interest match the following conditions:
-    - alive
-    - receivable by the station
-    - not a temporary norad id
-    """
-
     # pylint: disable=too-many-instance-attributes
     transmitters_stats = None
     transmitters_receivable = None
     norad_cat_ids_alive = None
-    norad_cat_ids_of_interest = None
     satellites_by_norad_id = None
     tles_all = None
     required_files = [
@@ -265,15 +255,6 @@ class CacheManager:
             json.dump(self.transmitters_receivable, fp_transmitters2, indent=2)
 
     def update_transmitters(self):
-        # Extract NORAD IDs from transmitters
-        self.norad_cat_ids_of_interest = sorted(
-            set(
-                transmitter["norad_cat_id"]
-                for transmitter in self.transmitters_receivable.values()
-                if transmitter["norad_cat_id"] in self.norad_cat_ids_alive
-            )
-        )
-
         # Store transmitters
         with open(self.transmitters_file, "w") as fp_transmitters:
             logging.info("Filter transmitters based on ground station capability.")
