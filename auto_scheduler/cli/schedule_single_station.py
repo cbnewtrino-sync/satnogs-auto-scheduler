@@ -14,7 +14,7 @@ from tqdm import tqdm
 from auto_scheduler import __version__ as auto_scheduler_version
 from auto_scheduler import settings
 from auto_scheduler.cache import CacheManager
-from auto_scheduler.io import read_priorities_transmitters, read_transmitters_of_interest
+from auto_scheduler.io import read_priorities_transmitters
 from auto_scheduler.pass_predictor import create_observer, find_constrained_passes
 from auto_scheduler.satnogs_client import (
     APIRequestError,
@@ -27,7 +27,6 @@ from auto_scheduler.schedulers import ordered_scheduler, report_efficiency
 from auto_scheduler.utils import (
     get_priority_passes,
     print_scheduledpass_summary,
-    satellites_from_transmitters,
     search_satellites,
     print_using_tqdm,
 )
@@ -406,46 +405,14 @@ def schedule_single_station(
         cache.flush_cache()
     cache.update()
 
-    # ---------- New Method ----------
-
     # Extract interesting satellites from receivable transmitters
-    satellites_new = search_satellites(
+    satellites = search_satellites(
         cache.transmitters_receivable,
         cache.transmitters_stats,
         cache.tles_all,
         cache.satellites_by_norad_id,
         skip_frequency_violators,
     )
-
-    # ---------- Old Method ----------
-    cache.update_transmitters()
-    # Filter TLEs for objects of interest only
-    tles = list(
-        filter(
-            lambda entry: entry["norad_cat_id"] in cache.norad_cat_ids_of_interest, cache.tles_all
-        )
-    )
-
-    # Read transmitters
-    transmitters_of_interest = read_transmitters_of_interest(cache.transmitters_file)
-
-    # Extract interesting satellites from receivable transmitters
-    satellites_old = satellites_from_transmitters(transmitters_of_interest, tles)
-
-    # Skip satellites with frequency misuse (avoids scheduling permission errors)
-    if skip_frequency_violators:
-        satellites_old = list(
-            filter(
-                lambda sat: not cache.satellites_by_norad_id[sat.id]["is_frequency_violator"],
-                satellites_old,
-            )
-        )
-
-    # ---------- Comparison ----------
-    compare_satellite_lists(satellites_old, satellites_new)
-
-    # Both lists are equal, arbitrarily choose the new list to continue
-    satellites = satellites_new
 
     # Find passes
     constraints = {
