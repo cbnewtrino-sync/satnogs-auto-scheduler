@@ -5,9 +5,8 @@ import sys
 
 from auto_scheduler import settings
 from auto_scheduler.cache import CacheManager
-from auto_scheduler.io import read_tles, read_transmitters_of_interest
 from auto_scheduler.satnogs_client import get_groundstation_info
-from auto_scheduler.utils import satellites_from_transmitters
+from auto_scheduler.utils import search_satellites
 
 
 class Preference:
@@ -63,14 +62,14 @@ def main(station_id, constrains_file, priorities_file):
     logging.info(f"Cache update needed: {cache.update_needed()}")
     cache.update()
 
-    # Read tles
-    tles = list(read_tles(cache.tles_file))
-
-    # Read transmitters
-    transmitters = read_transmitters_of_interest(cache.transmitters_file)
-
     # Extract interesting satellites from receivable transmitters
-    satellites = satellites_from_transmitters(transmitters, tles)
+    satellites = search_satellites(
+        cache.transmitters_receivable,
+        cache.transmitters_stats,
+        cache.tles_all,
+        cache.satellites_by_norad_id,
+        skip_frequency_violators=True,
+    )
 
     # crosscheck the list of satellites and priorities
     sat_list = {}
