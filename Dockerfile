@@ -42,7 +42,7 @@ RUN --mount=type=bind,source=.git,target=.git \
 # Build wheel for ephem
 RUN --mount=type=cache,target=/root/.cache/pip \
     rm -rf /dist/ephem*.whl && \
-    pip wheel --wheel-dir /dist/ ephem
+    pip wheel --wheel-dir /dist/ ephem~=4.2
 
 FROM python:3.11-slim
 LABEL org.opencontainers.image.authors='sa2kng <knegge@gmail.com>'
