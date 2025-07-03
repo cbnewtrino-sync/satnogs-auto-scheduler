@@ -19,8 +19,8 @@ sudo apt-get -y install git python3
 
 mkdir auto-scheduler
 cd auto-scheduler
-python3 -m venv env
-source env/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git@0.4
 ```
 
@@ -29,6 +29,9 @@ Verify the installation by checking the installed version:
 $ schedule_single_station --version
 satnogs-auto-scheduler 0.4
 ```
+
+NOTE: Previous releases of this guide installed the virtual environment in a directory called `env`.
+This has been changed to `.venv` to follow the official [Python Packaging User Guide on virtual environments](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/#create-and-use-virtual-environments).
 
 ## Usage
 
@@ -91,7 +94,7 @@ crontab -e
 
 Add a line like this - execute the scheduling script on each full hour:
 ```bash
-0 */1 * * * <path_to_auto_scheduler>/env/bin/schedule_single_station -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -f -z
+0 */1 * * * <path_to_auto_scheduler>/.venv/bin/schedule_single_station -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -f -z
 ```
 
 Omit the `-f` option to also fill in the gaps, but be aware if using a rotator setup! This will wear-out your rotator very quickly!
@@ -107,7 +110,7 @@ The advantage of using a systemd-timer for invoking the auto-scheduler lies in t
 
    [Service]
    Type=oneshot
-   ExecStart=<path_to_auto_scheduler>/env/bin/schedule_single_station -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -z
+   ExecStart=<path_to_auto_scheduler>/.venv/bin/schedule_single_station -s <station_id> -d 1.2 -P <path_to_priority_list>/<priority_file>.txt -z
    User=pi
    ```
 
