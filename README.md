@@ -7,18 +7,24 @@ SatNOGS network and requires [python-satellitetle](https://gitlab.com/librespace
 
 ## Installation
 
-You will need Python 3 and the Python virtualenv utility. The following example assumes that you are using Debian.
+(tested with Linux / Debian)
+
+Ensure git and Python is installed, and create a directory for all upcoming files.
+Then create a Python virtual environment, activate it and install the desired
+version of satnogs-auto-scheduler with pip directly from the remote git repository.
 
 ```bash
 sudo apt-get update
-sudo apt-get install git virtualenv python3-virtualenv
+sudo apt-get -y install git python3
 
-virtualenv -p python3 env
+mkdir auto-scheduler
+cd auto-scheduler
+python3 -m venv env
 source env/bin/activate
 pip install git+https://gitlab.com/librespacefoundation/satnogs/satnogs-auto-scheduler.git@0.4
 ```
 
-You can verify your installed version with the following command:
+Verify the installation by checking the installed version:
 ```
 $ schedule_single_station --version
 satnogs-auto-scheduler 0.4
