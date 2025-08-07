@@ -414,6 +414,7 @@ def schedule_single_station(
     if flush_cache:
         cache.flush_cache()
     cache.update()
+    cache.update_transmitters()
 
     # Extract interesting satellites from receivable transmitters
     satellites = search_satellites(
