@@ -68,7 +68,6 @@ def main(station_id, constrains_file, priorities_file):
         cache.transmitters_stats,
         cache.tles_all,
         cache.satellites_by_norad_id,
-        skip_frequency_violators=True,
     )
 
     # crosscheck the list of satellites and priorities

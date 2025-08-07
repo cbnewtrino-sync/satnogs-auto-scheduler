@@ -25,6 +25,7 @@ from auto_scheduler.satnogs_client import (
 )
 from auto_scheduler.schedulers import ordered_scheduler, report_efficiency
 from auto_scheduler.utils import (
+    SatelliteConstraints,
     get_priority_passes,
     print_scheduledpass_summary,
     search_satellites,
@@ -330,6 +331,10 @@ def main():  # noqa: C901
     dryrun = args.dryrun
     flush_cache = args.flush_cache
 
+    satellite_constraints: SatelliteConstraints = {
+        "skip_frequency_violators": True,
+    }
+
     schedule_single_station(
         ground_station_id,
         wait_time_seconds,
@@ -347,6 +352,7 @@ def main():  # noqa: C901
         dryrun,
         angular_separation,
         flush_cache,
+        satellite_constraints,
     )
 
 
@@ -393,8 +399,12 @@ def schedule_single_station(
     dryrun,
     angular_separation,
     flush_cache,
-    skip_frequency_violators=True,
+    satellite_constraints: SatelliteConstraints,
 ):
+    """
+    Args:
+        satellite_constraints: Constraints that each satellite must fulfill
+    """
     # pylint: disable=too-many-arguments,too-many-locals
 
     # Create or update the transmitter & TLE cache
@@ -411,7 +421,7 @@ def schedule_single_station(
         cache.transmitters_stats,
         cache.tles_all,
         cache.satellites_by_norad_id,
-        skip_frequency_violators,
+        satellite_constraints,
     )
 
     # Find passes

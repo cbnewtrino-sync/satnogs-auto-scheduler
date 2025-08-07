@@ -1,9 +1,14 @@
+from typing import TypedDict
 import inspect
 import contextlib
 
 from tqdm import tqdm
 
 from auto_scheduler import Satellite
+
+
+class SatelliteConstraints(TypedDict):
+    skip_frequency_violators: bool
 
 
 def get_priority_passes(passes, priorities, favorite_transmitters, only_priority, min_priority):
@@ -74,7 +79,9 @@ def search_satellites(
     transmitters_stats,
     tles_all,
     satellites_by_norad_id,
-    skip_frequency_violators,
+    satellite_constraints: SatelliteConstraints = {
+        "skip_frequency_violators": True,
+    },
 ):
     """
     Extract satellites of interest based on the list of transmitters of interest
@@ -88,6 +95,7 @@ def search_satellites(
     # Arguments
     transmitters (list): List of transmitters of interest
     tles (list): List of TLEs for all satellites
+    satellite_constraints: Constraints that each satellite must fulfill
 
     # Returns
     List of satellites
@@ -142,7 +150,7 @@ def search_satellites(
                 satellites.append(Satellite(tle, transmitter))
 
     # Skip satellites with frequency misuse (avoids scheduling permission errors)
-    if skip_frequency_violators:
+    if satellite_constraints["skip_frequency_violators"]:
         satellites = list(
             filter(
                 lambda sat: not satellites_by_norad_id[sat.id]["is_frequency_violator"], satellites
