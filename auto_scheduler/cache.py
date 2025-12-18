@@ -171,7 +171,7 @@ class CacheManager:
         Download the catalog of satellites from SatNOGS DB.
 
         Store the data in two formats:
-        - Filtered by satellites which have a norad id and are alive,
+        - Filtered by satellites which have a norad id and are in orbit,
           indexed by norad id (DEPRECATED)
         - All satellites, indexed by sat id (SatNOGS Satellite ID) plus
           the mapping between norad id and sat id
@@ -211,7 +211,7 @@ class CacheManager:
             # Search satellites which have a norad_cat_id and are alive, indexed by norad id
             if satellite["norad_cat_id"] is None:
                 continue
-            if not satellite["status"] == "alive":
+            if not satellite["status"] == "in orbit":
                 continue
 
             norad_cat_ids_alive.append(satellite["norad_cat_id"])
