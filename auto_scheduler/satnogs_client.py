@@ -101,6 +101,60 @@ def get_paginated_endpoint(
     return data
 
 
+def get_detail_endpoint(
+    url,
+    token=None,
+    max_retries=0,
+    filter_output_callback=None,
+):
+    # pylint: disable=too-many-arguments
+    """
+    Fetch data from a SatNOGS Network/DB API endpoint that returns a single object.
+
+    Arguments
+    url (str):          The URL of the API endpoint
+    token (str):        Authorization Token.
+                        Default: None - Use no authentication.
+    timeout (int):      Requests timeout in Seconds
+                        Default: 3 Seconds
+    max_retries (int) : The maximum number of retries to attempt per request.
+                        This applies only to failed DNS lookups, socket connections and
+                        connection timeouts.
+                        Default: 0 - No retries.
+    """
+    try:
+        session = requests.Session()
+        session.mount("https://", requests.adapters.HTTPAdapter(max_retries=max_retries))
+
+        if token:
+            headers = {"Authorization": f"Token {token}"}
+        else:
+            headers = None
+
+        response = session.get(url=url, headers=headers, timeout=TIMEOUT)
+        response.raise_for_status()
+
+        data = response.json()
+
+        if filter_output_callback:
+            return filter_output_callback(data)
+    except requests.HTTPError as exception:
+        # Do not raise 404 for detail endpoints, return None instead
+        if response.status_code == 404:
+            return None
+        try:
+            err = response.json()
+            logger.error(f"API Request for {url} failed, error: {err}")
+        except json.decoder.JSONDecodeError:
+            logger.error(f"API Request for {url} failed; HTTPError: {exception} ")
+        raise APIRequestError from exception
+    except requests.exceptions.ReadTimeout as exception:
+        logger.error(f"Timeout after {TIMEOUT} seconds while requesting {url}")
+        raise APIRequestError from exception
+
+    return data
+
+
 def get_satellite_info():
     """
     Fetch all satellites from SatNOGS DB
@@ -224,18 +278,14 @@ def get_groundstation_info(ground_station_id):
     Returns
     (dict): The requested ground station information or None
     """
-    stations = get_paginated_endpoint(
-        f"{settings.NETWORK_BASE_URL}/api/stations/?id={ground_station_id}"
+    station = get_detail_endpoint(
+        f"{settings.NETWORK_BASE_URL}/api/stations/{ground_station_id}"
     )
 
-    selected_stations = list(filter(lambda s: s["id"] == ground_station_id, stations))
-
-    if not selected_stations:
+    if not station:
         logger.info("No ground station information found!")
-        # Exit if no ground station found
-        return None
 
-    return selected_stations[0]
+    return station
 
 
 def check_station_availability(station, allow_testing):
