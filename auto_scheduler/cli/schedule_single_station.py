@@ -244,31 +244,23 @@ def main():  # noqa: C901
     if not args.dryrun and not check_station_availability(ground_station, args.allow_testing):
         sys.exit(1)
 
-    # Set minimum culmination elevation
-    if args.min_culmination is None:
-        min_culmination = ground_station["min_horizon"]
-    else:
-        if args.min_culmination < 0.0:
-            min_culmination = 0.0
-        elif args.min_culmination > 90.0:
-            min_culmination = 90.0
-        else:
-            min_culmination = args.min_culmination
-
     # Set minimum rise/set elevation
-    if not args.horizon:
-        # Use minimum altitude for computing rise and set times (horizon to horizon otherwise)
-        if args.min_riseset is None:
-            min_riseset = ground_station["min_horizon"]
-        else:
-            if args.min_riseset < 0.0:
-                min_riseset = 0.0
-            elif args.min_riseset > 90.0:
-                min_riseset = 90.0
-            else:
-                min_riseset = args.min_riseset
+    args_min_rise_set = args.min_riseset if not args.horizon else 0.0
+
+    if args_min_rise_set is not None and not ground_station["horizon_hard_limit"]:
+        min_riseset = args_min_rise_set
     else:
-        min_riseset = 0.0
+        min_riseset = max(ground_station["min_horizon"], args_min_rise_set or 0.0)
+
+    min_riseset = min(90.0, max(min_riseset, 0.0))
+
+    # Set minimum culmination elevation
+    if args.min_culmination is not None and not ground_station["min_culmination_hard_limit"]:
+        min_culmination = args.min_culmination
+    else:
+        min_culmination = max(ground_station["min_culmination"], args.min_culmination or 0.0)
+
+    min_culmination = min(90.0, max(min_culmination, 0.0))
 
     # Set start azimuth viewing window
     if args.start_azimuth < 0.0:
@@ -470,8 +462,6 @@ def schedule_single_station(
     # Priority scheduler
     prioritypasses = sorted(prioritypasses, key=lambda satpass: -satpass["priority"])
     scheduledpasses = ordered_scheduler(prioritypasses, scheduledpasses, wait_time_seconds)
-    for satpass in passes:
-        logging.debug(satpass)
 
     # Normal scheduler
     normalpasses = sorted(normalpasses, key=lambda satpass: -satpass["priority"])
