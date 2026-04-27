@@ -16,12 +16,12 @@ min_horizon =  5
 
 # Output Section
 [passes]
-count = 119
+count = 120
 
 [passes.first_pass]
-tr = 2019-11-05T12:22:27
-tt = 2019-11-05T12:26:26
-ts = 2019-11-05T12:30:24
-azr = 319
-altt = 30
-azs = 100
+start = 2019-11-05T12:07:10
+culmination = 2019-11-05T12:07:50
+end = 2019-11-05T12:14:15
+start_azimuth = 58
+culmination_altitude = 69
+end_azimuth = 187

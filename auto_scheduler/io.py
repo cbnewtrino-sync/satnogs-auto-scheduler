@@ -2,31 +2,33 @@ import csv
 import logging
 import os
 
+from auto_scheduler.domain import TransmitterInfo
+
 logger = logging.getLogger(__name__)
 
 
-def read_transmitters_of_interest(filename):
+def read_transmitters_of_interest(filename: str) -> list[TransmitterInfo]:
     """
     Read transmitter of interest from file.
     Additionally to the list of transmitters receivable by the station
     this file contains transmitter statistics too.
 
     # Return type
-    list(dict)
+    list(auto_scheduler.domain.TransmitterInfo)
     """
-    transmitters_stats = []
+    transmitters_stats: list[TransmitterInfo] = []
     with open(filename, "r") as fp_transmitters:
         for line in fp_transmitters.readlines():
             item = line.split()
             transmitters_stats.append(
-                {
-                    "norad_cat_id": int(item[0]),
-                    "uuid": item[1],
-                    "success_rate": float(item[2]) / 100.0,
-                    "good_count": int(item[3]),
-                    "data_count": int(item[4]),
-                    "mode": item[5],
-                }
+                TransmitterInfo(
+                    norad_cat_id=int(item[0]),
+                    uuid=item[1],
+                    success_rate=float(item[2]) / 100.0,
+                    good_count=int(item[3]),
+                    data_count=int(item[4]),
+                    mode=item[5],
+                )
             )
     return transmitters_stats
 

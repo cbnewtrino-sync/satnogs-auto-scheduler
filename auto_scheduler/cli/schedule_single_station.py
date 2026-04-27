@@ -7,7 +7,7 @@ from __future__ import division
 import argparse
 import logging
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from tqdm import tqdm
 
@@ -28,7 +28,8 @@ from auto_scheduler.utils import (
     SatelliteConstraints,
     get_priority_passes,
     print_scheduledpass_summary,
-    search_satellites,
+    satellites_by_norad_from_transmitters,
+    search_transmitters,
     print_using_tqdm,
 )
 
@@ -61,7 +62,7 @@ def main():  # noqa: C901
         "-t",
         "--starttime",
         help="Start time (YYYY-MM-DDTHH:MM:SS) [default: now + 10 minutes]",
-        default=(datetime.utcnow() + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%S"),
+        default=(datetime.now(timezone.utc) + timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%S"),
     )
     parser.add_argument(
         "-d",
@@ -231,7 +232,7 @@ def main():  # noqa: C901
         min_priority = args.min_priority
 
     # Set time range
-    tnow = datetime.strptime(args.starttime, "%Y-%m-%dT%H:%M:%S")
+    tnow = datetime.strptime(args.starttime, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
     tmin = tnow
     tmax = tnow + timedelta(hours=length_hours)
 
@@ -408,14 +409,14 @@ def schedule_single_station(
     cache.update()
     cache.update_transmitters()
 
-    # Extract interesting satellites from receivable transmitters
-    satellites = search_satellites(
+    # Extract interesting transmitters and their corresponding satellites
+    transmitters = search_transmitters(
         cache.transmitters_receivable,
         cache.transmitters_stats,
-        cache.tles_all,
         cache.satellites_by_norad_id,
         satellite_constraints,
     )
+    satellites_by_norad = satellites_by_norad_from_transmitters(transmitters, cache.tles_all)
 
     # Find passes
     constraints = {
@@ -425,7 +426,26 @@ def schedule_single_station(
         "min_culmination": min_culmination,
         "angular_separation": angular_separation,
     }
-    logging.info(f"Search passes for {len(satellites)} satellites:")
+    try:
+        logging.info("Download list of scheduled passes from SatNOGS Network...")
+        scheduled_observations = get_scheduled_passes_from_network(ground_station_id, tmin, tmax)
+    except APIRequestError:
+        logging.error("Download from SatNOGS Network failed.")
+        sys.exit(1)
+
+    logging.info(
+        f"Found {len(scheduled_observations)} scheduled passes "
+        f"between {tmin} and {tmax} on ground station {ground_station_id}."
+    )
+
+    occupied_ranges = [
+        scheduled_observation.time_range for scheduled_observation in scheduled_observations
+    ]
+
+    logging.info(
+        f"Search passes for {len(transmitters)} transmitters across "
+        f"{len(satellites_by_norad)} satellites:"
+    )
 
     # Set observer
     observer = create_observer(
@@ -435,24 +455,27 @@ def schedule_single_station(
         min_riseset=min_riseset,
     )
     passes = []
-    for satellite in tqdm(satellites, disable=None):
+    for transmitter in tqdm(transmitters, disable=None):
+        satellite = satellites_by_norad.get(transmitter.norad_cat_id)
+        if satellite is None:
+            logging.warning(
+                "No TLE found for transmitter %s on NORAD %s, skipping.",
+                transmitter.uuid,
+                transmitter.norad_cat_id,
+            )
+            continue
         with print_using_tqdm():
-            passes.extend(find_constrained_passes(satellite, observer, constraints))
+            passes.extend(
+                find_constrained_passes(
+                    satellite,
+                    transmitter,
+                    observer,
+                    constraints,
+                    scheduled_intervals=occupied_ranges,
+                )
+            )
 
     priorities, favorite_transmitters = read_priorities_transmitters(priorities_filename)
-
-    # List of scheduled passes
-    try:
-        logging.info("Download list of scheduled passes from SatNOGS Network...")
-        scheduledpasses = get_scheduled_passes_from_network(ground_station_id, tmin, tmax)
-    except APIRequestError:
-        logging.error("Download from SatNOGS Network failed.")
-        sys.exit(1)
-
-    logging.info(
-        f"Found {len(scheduledpasses)} scheduled passes "
-        f"between {tmin} and {tmax} on ground station {ground_station_id}."
-    )
 
     # Get passes of priority objects
     prioritypasses, normalpasses = get_priority_passes(
@@ -460,35 +483,40 @@ def schedule_single_station(
     )
 
     # Priority scheduler
-    prioritypasses = sorted(prioritypasses, key=lambda satpass: -satpass["priority"])
-    scheduledpasses = ordered_scheduler(prioritypasses, scheduledpasses, wait_time_seconds)
+    prioritypasses = sorted(prioritypasses, key=lambda predicted_pass: -predicted_pass.priority)
+    selected_prioritypasses = ordered_scheduler(prioritypasses, occupied_ranges, wait_time_seconds)
 
     # Normal scheduler
-    normalpasses = sorted(normalpasses, key=lambda satpass: -satpass["priority"])
-    scheduledpasses = ordered_scheduler(normalpasses, scheduledpasses, wait_time_seconds)
+    normalpasses = sorted(normalpasses, key=lambda predicted_pass: -predicted_pass.priority)
+    selected_normalpasses = ordered_scheduler(normalpasses, occupied_ranges, wait_time_seconds)
+    selected_passes = selected_prioritypasses + selected_normalpasses
 
     # Report scheduling efficiency
-    report_efficiency(scheduledpasses, passes)
+    report_efficiency(selected_passes, passes)
 
     print_scheduledpass_summary(
-        scheduledpasses, ground_station_id, cache.satellites_by_norad_id, printer=logging.info
+        scheduled_observations,
+        selected_passes,
+        ground_station_id,
+        cache.satellites_by_norad_id,
+        printer=logging.info,
     )
 
     # Login and schedule passes
     passes_schedule = sorted(
-        (satpass for satpass in scheduledpasses if not satpass["scheduled"]),
-        key=lambda satpass: satpass["tr"],
+        selected_passes,
+        key=lambda predicted_pass: predicted_pass.window.start_sample.instant.to_datetime(),
     )
     if (not dryrun) and passes_schedule:
         logging.info("Scheduling all unscheduled passes listed above.")
         observations = list(
             {
                 "ground_station_id": ground_station_id,
-                "transmitter_uuid": satpass["transmitter"]["uuid"],
-                "start": satpass["tr"],
-                "end": satpass["ts"],
+                "transmitter_uuid": predicted_pass.transmitter.uuid,
+                "start": predicted_pass.window.start_sample.instant.to_datetime(),
+                "end": predicted_pass.window.end_sample.instant.to_datetime(),
             }
-            for satpass in passes_schedule
+            for predicted_pass in passes_schedule
         )
         schedule_observations_batch(observations)
 

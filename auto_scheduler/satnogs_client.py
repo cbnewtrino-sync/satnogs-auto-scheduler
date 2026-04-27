@@ -1,15 +1,29 @@
 import json
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import requests
+from satnogs_predict import TimeRange
 
 from auto_scheduler import settings
+from auto_scheduler.domain import ScheduledObservation
 
 logger = logging.getLogger(__name__)
 
 TIMEOUT = 30  # seconds
+
+
+def _parse_api_datetime(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def _format_api_datetime(value: datetime) -> str:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    else:
+        value = value.astimezone(timezone.utc)
+    return value.strftime("%Y-%m-%d %H:%M:%S")
 
 
 class APIRequestError(IOError):
@@ -235,27 +249,22 @@ def get_scheduled_passes_from_network(ground_station, tmin, tmax):
     def filter_callback(data):
         scheduled_passes = []
         for obs in data:
-            start = datetime.strptime(obs["start"].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
-            end = datetime.strptime(obs["end"].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
-            satpass = {
-                "tr": start,
-                "ts": end,
-                "td": end - start,
-                "scheduled": True,
-                "altt": obs["max_altitude"],
-                "priority": 1,
-                "transmitter": {"uuid": obs["transmitter"], "mode": ""},
-                "satellite": {"name": "", "id": obs["norad_cat_id"]},
-            }
+            start = _parse_api_datetime(obs["start"])
+            end = _parse_api_datetime(obs["end"])
+            scheduled_observation = ScheduledObservation(
+                time_range=TimeRange.from_datetimes(start, end),
+                transmitter_uuid=obs["transmitter"],
+                norad_cat_id=obs["norad_cat_id"],
+            )
 
-            if satpass["ts"] > tmin and satpass["tr"] < tmax:
+            if end > tmin and start < tmax:
                 # Only store observations which are during the ROI for scheduling
-                scheduled_passes.append(satpass)
+                scheduled_passes.append(scheduled_observation)
         return scheduled_passes
 
     def stop_criterion_callback(data):
         # Last fetched observation is older than the ROI for scheduling, end loop.
-        end_time = datetime.strptime(data[-1]["end"].replace("Z", ""), "%Y-%m-%dT%H:%M:%S")
+        end_time = _parse_api_datetime(data[-1]["end"])
         return end_time < tmin
 
     return get_paginated_endpoint(
@@ -278,9 +287,7 @@ def get_groundstation_info(ground_station_id):
     Returns
     (dict): The requested ground station information or None
     """
-    station = get_detail_endpoint(
-        f"{settings.NETWORK_BASE_URL}/api/stations/{ground_station_id}"
-    )
+    station = get_detail_endpoint(f"{settings.NETWORK_BASE_URL}/api/stations/{ground_station_id}")
 
     if not station:
         logger.info("No ground station information found!")
@@ -338,7 +345,7 @@ def handle_scheduling_error(response, exception):
             == "No permission to schedule observations"
         ):
             # Typical server response: 'No permission to schedule observations on station: 42'
-            logger.error(f'Sever response: {response_json["non_field_errors"][0]}')
+            logger.error(f"Sever response: {response_json['non_field_errors'][0]}")
             logger.info(
                 "note: This permission error might be specific to only this "
                 "(station, satellite, transmitter) pair."
@@ -360,8 +367,8 @@ def serialize_observation(satpass):
     return {
         "ground_station": satpass["ground_station_id"],
         "transmitter_uuid": satpass["transmitter_uuid"],
-        "start": satpass["start"].strftime("%Y-%m-%d %H:%M:%S"),
-        "end": satpass["end"].strftime("%Y-%m-%d %H:%M:%S"),
+        "start": _format_api_datetime(satpass["start"]),
+        "end": _format_api_datetime(satpass["end"]),
     }
 
 

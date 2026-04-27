@@ -1,5 +1,3 @@
-from .satellite import Satellite  # noqa
-
 try:
     from auto_scheduler._version import __version__
 except ModuleNotFoundError:

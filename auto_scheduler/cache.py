@@ -191,16 +191,16 @@ class CacheManager:
         for satellite in satellites_list:
             if satellite["norad_cat_id"] in norad_to_sat_id:
                 logger.warning(
-                    'Duplicated NORAD ID found! '
-                    f'{satellite["sat_id"]}  vs '
-                    f'{satellites_by_sat_id[norad_to_sat_id[satellite["norad_cat_id"]]]}'
+                    "Duplicated NORAD ID found! "
+                    f"{satellite['sat_id']}  vs "
+                    f"{satellites_by_sat_id[norad_to_sat_id[satellite['norad_cat_id']]]}"
                 )
                 continue
 
             if satellite["norad_cat_id"] is None:
                 logger.debug(
-                    f'INFO: Skip Satellite {satellite["sat_id"]} with missing NORAD ID '
-                    'since having an assigned or temporary NORAD ID is required for scheduling.'
+                    f"INFO: Skip Satellite {satellite['sat_id']} with missing NORAD ID "
+                    "since having an assigned or temporary NORAD ID is required for scheduling."
                 )
                 continue
 
@@ -235,9 +235,9 @@ class CacheManager:
 
         for antenna in self.ground_station_antennas:
             logging.info(
-                'Download list of active transmitters between '
-                f'{antenna["frequency"] * 1e-6:.0f} and '
-                f'{antenna["frequency_max"] * 1e-6:.0f} MHz from SatNOGS DB...'
+                "Download list of active transmitters between "
+                f"{antenna['frequency'] * 1e-6:.0f} and "
+                f"{antenna['frequency_max'] * 1e-6:.0f} MHz from SatNOGS DB..."
             )
 
             try:

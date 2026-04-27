@@ -42,7 +42,7 @@ def test_search_satellites():
         tles_all,
         satellites_by_norad_id,
     )
-    norad_cat_ids = set(sat.id for sat in satellites)
+    norad_cat_ids = set(int(sat.identifier) for sat in satellites)
 
     assert norad_cat_ids == norad_cat_ids_fixture
 
@@ -76,4 +76,4 @@ def test_search_satellites_online():
     )
 
     for satellite in satellites:
-        assert satellite.id < 90000
+        assert int(satellite.identifier) < 90000
