@@ -27,10 +27,9 @@ dependencies = [
     "requests~=2.32",
     "python-decouple~=3.8",
     "tqdm~=4.66",
-    # Astronomy
-    "ephem~=4.2",
+    "satnogs-predict~=0.0",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 
 [project.optional-dependencies]
 dev = [
