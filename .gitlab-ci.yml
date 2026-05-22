@@ -2,7 +2,7 @@ variables:
   GITLAB_CI_IMAGE_PYTHON3: 'python:3.11'
   GITLAB_CI_PYPI_TOX: 'tox~=4.17.1'
   GITLAB_CI_PYPI_RUFF: 'ruff~=0.5.7'
-  GITLAB_CI_PYPI_HATCH: 'hatch~=1.12.0'
+  GITLAB_CI_PYPI_HATCH: 'hatch~=1.16.0'
 
 stages:
   - static
