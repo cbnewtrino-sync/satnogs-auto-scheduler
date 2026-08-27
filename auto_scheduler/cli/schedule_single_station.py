@@ -175,6 +175,13 @@ def main():  # noqa: C901
     )
     parser.set_defaults(allow_testing=False)
     parser.add_argument(
+        "-U",
+        "--allow-unavailable",
+        help="Allow scheduling on stations which are in unavailable mode [default: False]",
+        action="store_true",
+    )
+    parser.set_defaults(allow_unavailable=False)
+    parser.add_argument(
         "--flush-cache",
         help="Clean the cache and download current transmitters, satellites and TLE.",
         action="store_true",
@@ -242,7 +249,9 @@ def main():  # noqa: C901
     except APIRequestError:
         sys.exit(1)
 
-    if not args.dryrun and not check_station_availability(ground_station, args.allow_testing):
+    if not args.dryrun and not check_station_availability(
+        ground_station, args.allow_testing, args.allow_unavailable
+    ):
         sys.exit(1)
 
     # Set minimum rise/set elevation

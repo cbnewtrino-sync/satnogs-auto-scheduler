@@ -295,7 +295,7 @@ def get_groundstation_info(ground_station_id):
     return station
 
 
-def check_station_availability(station, allow_testing):
+def check_station_availability(station, allow_testing, allow_unavailable):
     """
     Check if scheduling is possible on the given ground station.
 
@@ -307,18 +307,35 @@ def check_station_availability(station, allow_testing):
     allow_testing (bool): If true the station is considered available for scheduling
                           also when the station status is testing
     """
-    if station["status"] == "Online" or (station["status"] == "Testing" and allow_testing):
+    is_connected = station["is_connected"]
+    is_available = station["is_available"]
+    testing = station["testing"]
+
+    online_station = is_connected and is_available and not testing
+    testing_station = is_connected and is_available and testing
+    unavailable_station = is_connected and not is_available
+
+    if (
+        online_station
+        or (testing_station and allow_testing)
+        or (unavailable_station and allow_unavailable)
+    ):
         return True
 
-    if station["status"] == "Testing" and not allow_testing:
+    if testing_station and not allow_testing:
         logger.info(
             f"Ground station {station['id']} is in testing mode but auto-scheduling is not "
             "allowed. Use -T command line argument to enable scheduling."
         )
+    if unavailable_station and not allow_unavailable:
+        logger.info(
+            f"Ground station {station['id']} is in unavailable mode but auto-scheduling is not "
+            "allowed. Use -U command line argument to enable scheduling."
+        )
     else:
         logger.info(
-            f"Ground station {station['id']} neither in 'online' nor in 'testing' mode, "
-            "can't schedule!"
+            f"Ground station {station['id']} neither in 'online' nor in 'testing' or "
+            "'unavailable' mode, can't schedule!"
         )
     return False
 
