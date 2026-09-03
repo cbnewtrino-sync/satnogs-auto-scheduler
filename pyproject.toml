@@ -27,7 +27,7 @@ dependencies = [
     "requests~=2.32",
     "python-decouple~=3.8",
     "tqdm~=4.66",
-    "satnogs-predict~=0.0",
+    "satnogs-predict~=1.0",
 ]
 requires-python = ">=3.11"
 
@@ -35,7 +35,6 @@ requires-python = ">=3.11"
 dev = [
     "pre-commit~=3.0.4",
     "pytest~=7.2.2",
-    "tomli~=2.0.1", # only needed with Python<=3.10
 ]
 
 [project.scripts]
