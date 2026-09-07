@@ -4,7 +4,7 @@ Unit tests for the pass predictor
 
 import datetime
 
-import tomli
+import tomllib
 
 from auto_scheduler.io import read_tles, read_transmitters_of_interest
 from auto_scheduler.pass_predictor import create_observer, find_constrained_passes
@@ -49,7 +49,7 @@ def test_find_passes():
     """
 
     with open("tests/fixtures/pass_prediction1.toml", "rb") as test_case_file:
-        test_case = tomli.load(test_case_file)
+        test_case = tomllib.load(test_case_file)
 
     tles = list(read_tles(test_case["files"]["tles_filename"]))
     transmitters = list(read_transmitters_of_interest(test_case["files"]["transmitters_filename"]))
