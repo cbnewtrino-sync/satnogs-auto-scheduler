@@ -4,7 +4,7 @@ import tempfile
 import pytest
 
 from auto_scheduler.cache import CacheManager
-from auto_scheduler.utils import search_satellites
+from auto_scheduler.utils import search_satellites, search_transmitters
 
 
 def key2int(dict_object):
@@ -77,3 +77,54 @@ def test_search_satellites_online():
 
     for satellite in satellites:
         assert int(satellite.identifier) < 90000
+
+
+def _load_search_inputs():
+    with open("./tests/fixtures/transmitters_receivable.json") as fp:
+        transmitters_receivable = json.load(fp)
+    with open("./tests/fixtures/transmitters_stats.json") as fp:
+        transmitters_stats = json.load(fp)
+    with open("./tests/fixtures/satellites.json") as fp:
+        satellites_by_norad_id = key2int(json.load(fp))
+    return transmitters_receivable, transmitters_stats, satellites_by_norad_id
+
+
+def test_search_transmitters_min_success_rate():
+    receivable, stats, satellites = _load_search_inputs()
+
+    unfiltered = search_transmitters(receivable, stats, satellites)
+    default = search_transmitters(receivable, stats, satellites, min_success_rate=0.0)
+    assert [t.uuid for t in default] == [t.uuid for t in unfiltered]
+
+    filtered = search_transmitters(receivable, stats, satellites, min_success_rate=50.0)
+    expected = [t.uuid for t in unfiltered if stats[t.uuid]["success_rate"] >= 50]
+    assert [t.uuid for t in filtered] == expected
+    assert 0 < len(filtered) < len(unfiltered)
+    assert all(t.success_rate >= 0.5 for t in filtered)
+
+
+def test_search_transmitters_min_success_rate_exempt():
+    receivable, stats, satellites = _load_search_inputs()
+
+    unfiltered = search_transmitters(receivable, stats, satellites)
+    low = next(t for t in unfiltered if stats[t.uuid]["success_rate"] < 50)
+
+    filtered = search_transmitters(
+        receivable, stats, satellites, min_success_rate=50.0, exempt_uuids={low.uuid}
+    )
+    assert low.uuid in [t.uuid for t in filtered]
+
+
+def test_search_transmitters_success_min_count():
+    receivable, stats, satellites = _load_search_inputs()
+
+    unfiltered = search_transmitters(receivable, stats, satellites)
+    filtered = search_transmitters(
+        receivable, stats, satellites, min_success_rate=50.0, success_min_count=20
+    )
+    expected = [
+        t.uuid
+        for t in unfiltered
+        if stats[t.uuid]["success_rate"] >= 50 or stats[t.uuid]["total_count"] < 20
+    ]
+    assert [t.uuid for t in filtered] == expected

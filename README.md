@@ -84,6 +84,17 @@ contrib/gen_prio_file.sh 37 > priorities_37.txt
 
 Please change the station id (here `37`) to your corresponding one!
 
+## Skip unproductive transmitters
+
+`-S/--min-success-rate` skips transmitters whose success rate on SatNOGS Network is below a
+percentage, like the success-rate filter on the network's scheduling page:
+```bash
+schedule_single_station -s <station_id> -d 1.2 -S 50 -n
+```
+Transmitters listed in the `-P` priorities file are never skipped. New transmitters have
+little history (often 0 %); to keep transmitters with fewer than N observations regardless
+of their rate, add `--success-min-count N`.
+
 ## Automation
 ### Add cron-job (Option A)
 

@@ -168,6 +168,22 @@ def main():  # noqa: C901
         default=0.0,
     )
     parser.add_argument(
+        "-S",
+        "--min-success-rate",
+        help="Skip transmitters whose SatNOGS Network success rate is below this "
+        + "(the percentage shown on the network website). Favourite transmitters "
+        + "from the -P file are never skipped [percent; default: 0, maximum: 100]",
+        type=float,
+        default=0.0,
+    )
+    parser.add_argument(
+        "--success-min-count",
+        help="Keep transmitters with fewer than this many observations in total, "
+        + "whatever their success rate (too little history to judge) [default: 0]",
+        type=int,
+        default=0,
+    )
+    parser.add_argument(
         "-T",
         "--allow-testing",
         help="Allow scheduling on stations which are in testing mode [default: False]",
@@ -237,6 +253,9 @@ def main():  # noqa: C901
         min_priority = 1.0
     else:
         min_priority = args.min_priority
+
+    min_success_rate = min(100.0, max(0.0, args.min_success_rate))
+    success_min_count = max(0, args.success_min_count)
 
     # Set time range
     tnow = datetime.strptime(args.starttime, "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc)
@@ -355,6 +374,8 @@ def main():  # noqa: C901
         angular_separation,
         flush_cache,
         satellite_constraints,
+        min_success_rate,
+        success_min_count,
     )
 
 
@@ -402,6 +423,8 @@ def schedule_single_station(
     angular_separation,
     flush_cache,
     satellite_constraints: SatelliteConstraints,
+    min_success_rate=0.0,
+    success_min_count=0,
 ):
     """
     Args:
@@ -418,12 +441,17 @@ def schedule_single_station(
     cache.update()
     cache.update_transmitters()
 
+    priorities, favorite_transmitters = read_priorities_transmitters(priorities_filename)
+
     # Extract interesting transmitters and their corresponding satellites
     transmitters = search_transmitters(
         cache.transmitters_receivable,
         cache.transmitters_stats,
         cache.satellites_by_norad_id,
         satellite_constraints,
+        min_success_rate=min_success_rate,
+        success_min_count=success_min_count,
+        exempt_uuids=frozenset(favorite_transmitters.values()),
     )
     satellites_by_norad = satellites_by_norad_from_transmitters(transmitters, cache.tles_all)
 
@@ -483,8 +511,6 @@ def schedule_single_station(
                     scheduled_intervals=occupied_ranges,
                 )
             )
-
-    priorities, favorite_transmitters = read_priorities_transmitters(priorities_filename)
 
     # Get passes of priority objects
     prioritypasses, normalpasses = get_priority_passes(

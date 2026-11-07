@@ -1,5 +1,6 @@
 import contextlib
 import inspect
+import logging
 from datetime import timezone
 from typing import Any, TypedDict
 
@@ -115,9 +116,17 @@ def search_transmitters(
     satellite_constraints: SatelliteConstraints = {
         "skip_frequency_violators": True,
     },
+    min_success_rate: float = 0.0,
+    success_min_count: int = 0,
+    exempt_uuids=frozenset(),
 ) -> list[TransmitterInfo]:
     """
     Extract satellites of interest based on the list of transmitters of interest
+
+    Transmitters whose SatNOGS Network success rate is below min_success_rate (percent,
+    0-100, the number shown on the network website) are skipped, unless their uuid is in
+    exempt_uuids (e.g. favourite transmitters from the priorities file) or they have fewer
+    than success_min_count observations in total (too little history to judge).
 
     NOTE:
     The transmitter mode is truncated. This was done in previous versions of the auto-scheduler
@@ -137,6 +146,7 @@ def search_transmitters(
 
     # Filter transmitters based on ground station capability
     transmitters_of_interest: list[TransmitterInfo] = []
+    n_low_success = 0
 
     for uuid, stats in transmitters_stats.items():
         # Skip transmitters which do not have statistics in SatNOGS Network (yet)
@@ -154,6 +164,16 @@ def search_transmitters(
             if satellites_by_norad_id[norad]["is_frequency_violator"]:
                 continue
 
+        # Skip historically unproductive transmitters
+        if (
+            min_success_rate > 0.0
+            and stats["success_rate"] < min_success_rate
+            and uuid not in exempt_uuids
+            and stats["total_count"] >= success_min_count
+        ):
+            n_low_success += 1
+            continue
+
         transmitters_of_interest.append(
             TransmitterInfo(
                 norad_cat_id=transmitters_receivable[uuid]["norad_cat_id"],
@@ -163,6 +183,11 @@ def search_transmitters(
                 data_count=stats["total_count"],
                 mode=str(transmitters_receivable[uuid]["mode"]).split()[0],
             )
+        )
+    if n_low_success:
+        logging.info(
+            f"Skipped {n_low_success} transmitters with success rate below "
+            f"{min_success_rate:g}%."
         )
     return transmitters_of_interest
 
